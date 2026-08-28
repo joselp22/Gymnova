@@ -62,7 +62,13 @@ public class PnlClasesGrupalesAdministrador extends JPanel {
     private final JButton btnDesactivar = new JButton("Desactivar clase");
     private final JButton btnLimpiar = new JButton("Nueva / Limpiar");
     private final JButton btnRefrescar = new JButton("Actualizar lista");
-    private final JButton btnAsignarCliente = new JButton("Asignar a un cliente");
+
+    // Modo "clase para una sola persona": al marcar el checkbox se
+    // habilita el combo con los clientes activos y se fuerza cupo=1.
+    // Al crear la clase se registra también su reserva en un solo paso.
+    private final JCheckBox chkParaUnCliente =
+            new JCheckBox("Clase para una sola persona");
+    private final JComboBox<OpcionRelacion> cboClienteAsignar = new JComboBox<>();
     private final JTextField txtBuscar = new JTextField();
     private final JTable tblClases = new JTable();
     private final JLabel lblCantidad = new JLabel("0 clases");
@@ -132,6 +138,16 @@ public class PnlClasesGrupalesAdministrador extends JPanel {
         campo(f,y++,"Fecha y hora * (AAAA-MM-DD HH:mm)",txtFechaHora,"Cupo máximo *",txtCupo);
         campo(f,y++,"Duración (minutos) *",txtDuracion,"Nivel",cboNivel);
         campo(f,y++,"Intensidad",cboIntensidad,"Descripción",new JScrollPane(txtDescripcion));
+
+        // Fila con el switch para clase individual + su combo de cliente.
+        chkParaUnCliente.setOpaque(false);
+        chkParaUnCliente.setToolTipText(
+                "Convierte la clase en una sesión personal para el cliente elegido. "
+                + "El cupo pasa a 1 y se genera su reserva al guardar.");
+        cboClienteAsignar.setEnabled(false);
+        cboClienteAsignar.setPreferredSize(new Dimension(260, 26));
+        campo(f, y++, "", chkParaUnCliente, "Cliente asignado", cboClienteAsignar);
+
         GridBagConstraints c=gbc(0,y); c.gridwidth=4; c.fill=GridBagConstraints.HORIZONTAL;
         f.add(chkActiva,c);
         tarjeta.add(f,BorderLayout.CENTER);
@@ -142,9 +158,7 @@ public class PnlClasesGrupalesAdministrador extends JPanel {
         estiloSecundario(btnActualizar);
         estiloAdvertencia(btnDesactivar);
         estiloClaro(btnLimpiar);
-        estiloSecundario(btnAsignarCliente);
-        acciones.add(btnCrear); acciones.add(btnActualizar); acciones.add(btnDesactivar);
-        acciones.add(btnAsignarCliente); acciones.add(btnLimpiar);
+        acciones.add(btnCrear); acciones.add(btnActualizar); acciones.add(btnDesactivar); acciones.add(btnLimpiar);
         tarjeta.add(acciones,BorderLayout.SOUTH);
         return tarjeta;
     }
@@ -175,91 +189,48 @@ public class PnlClasesGrupalesAdministrador extends JPanel {
         btnDesactivar.addActionListener(e->desactivar());
         btnLimpiar.addActionListener(e->limpiarFormulario());
         btnRefrescar.addActionListener(e->cargarClases());
-        btnAsignarCliente.addActionListener(e->asignarClienteAClase());
         txtBuscar.addActionListener(e->cargarClases());
+        // Al activar el modo individual: se habilita el combo de cliente,
+        // el cupo se fija en 1 y el campo se bloquea para dejar clara la
+        // intención de la clase. Al desactivarlo se restauran los valores.
+        chkParaUnCliente.addActionListener(e -> aplicarModoIndividual());
         tblClases.getSelectionModel().addListSelectionListener(e->{
             if(!e.getValueIsAdjusting()) cargarSeleccion();
         });
     }
 
-    /**
-     * Asigna la clase seleccionada de la tabla a UN cliente (una reserva
-     * individual). Reutiliza {@link controlador.FlujoRecepcionControlador
-     * #registrarReserva} para respetar las validaciones de cupo, fecha
-     * futura y unicidad (índice parcial ux_reserva_cliente_clase_activa).
-     */
-    private void asignarClienteAClase() {
-        if (idClaseSeleccionada == null) {
-            error("Selecciona la clase de la tabla a la que quieres asignar el cliente.");
-            return;
+    private void aplicarModoIndividual() {
+        boolean individual = chkParaUnCliente.isSelected();
+        cboClienteAsignar.setEnabled(individual);
+        if (individual) {
+            if (cboClienteAsignar.getItemCount() == 0) {
+                cargarClientes();
+            }
+            txtCupo.setText("1");
+            txtCupo.setEditable(false);
+            txtCupo.setToolTipText(
+                    "El cupo queda fijado en 1 porque la clase es para un solo cliente.");
+        } else {
+            txtCupo.setEditable(true);
+            txtCupo.setToolTipText(null);
+            if ("1".equals(txtCupo.getText().trim())) {
+                txtCupo.setText("20");
+            }
         }
+    }
 
-        // Trae los clientes activos con codigo + nombre para el combo.
-        List<OpcionRelacion> clientes;
+    private void cargarClientes() {
         try {
-            clientes = catalogos.listar("idCliente");
+            DefaultComboBoxModel<OpcionRelacion> m = new DefaultComboBoxModel<>();
+            for (OpcionRelacion o : catalogos.listar("idCliente")) {
+                m.addElement(o);
+            }
+            cboClienteAsignar.setModel(m);
         } catch (Exception ex) {
-            error("No se pudieron cargar los clientes: " + ex.getMessage());
-            return;
+            JOptionPane.showMessageDialog(this,
+                    "No se pudieron cargar los clientes: " + ex.getMessage(),
+                    "GYMNOVA", JOptionPane.WARNING_MESSAGE);
         }
-        if (clientes.isEmpty()) {
-            error("No hay clientes activos disponibles.");
-            return;
-        }
-
-        JComboBox<OpcionRelacion> cboCliente = new JComboBox<>(
-                clientes.toArray(new OpcionRelacion[0]));
-        JTextField txtObs = new JTextField();
-
-        JPanel form = new JPanel(new GridBagLayout());
-        int y = 0;
-        campo(form, y++, "Clase:",
-                new JLabel(nombreClaseSeleccionada()),
-                "Fecha:", new JLabel(fechaClaseSeleccionada()));
-        campo(form, y++, "Cliente *", cboCliente,
-                "Observaciones", txtObs);
-
-        int op = JOptionPane.showConfirmDialog(this, form,
-                "Asignar clase a un cliente",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if (op != JOptionPane.OK_OPTION) {
-            return;
-        }
-        OpcionRelacion sel = (OpcionRelacion) cboCliente.getSelectedItem();
-        if (sel == null || !(sel.getId() instanceof Number n)) {
-            error("Selecciona un cliente.");
-            return;
-        }
-
-        controlador.ClaseGrupalGestionControlador gestor = controlador;
-        Long idReserva = gestor.reservarParaCliente(
-                n.longValue(),
-                idClaseSeleccionada.intValue(),
-                txtObs.getText().trim());
-        if (idReserva == null) {
-            error(gestor.getMensaje());
-            return;
-        }
-        mensaje("Clase asignada correctamente al cliente. Reserva #" + idReserva + ".");
-        cargarClases();
-    }
-
-    private String nombreClaseSeleccionada() {
-        for (ClaseGrupalResumen c : clases) {
-            if (c.getIdClase().equals(idClaseSeleccionada)) {
-                return c.getNombreClase();
-            }
-        }
-        return "(clase " + idClaseSeleccionada + ")";
-    }
-
-    private String fechaClaseSeleccionada() {
-        for (ClaseGrupalResumen c : clases) {
-            if (c.getIdClase().equals(idClaseSeleccionada)) {
-                return fecha(c.getFechaHora());
-            }
-        }
-        return "-";
     }
 
     private void cargarEntrenadores() {
@@ -300,10 +271,46 @@ public class PnlClasesGrupalesAdministrador extends JPanel {
     }
 
     private void crear() {
-        ClaseGrupal c=leerFormulario(null); if(c==null)return;
-        if(controlador.crearClase(c)){
-            mensaje("Clase grupal creada correctamente."); limpiarFormulario(); cargarClases();
-        } else error(controlador.getMensaje());
+        ClaseGrupal c = leerFormulario(null);
+        if (c == null) return;
+
+        // En modo individual necesitamos un cliente seleccionado ANTES de
+        // llegar a la BD, si no la clase se crearía sin reserva asociada.
+        Long idClienteAsignar = null;
+        if (chkParaUnCliente.isSelected()) {
+            OpcionRelacion sel =
+                    (OpcionRelacion) cboClienteAsignar.getSelectedItem();
+            if (sel == null || !(sel.getId() instanceof Number n)) {
+                error("Selecciona el cliente para la clase individual.");
+                return;
+            }
+            idClienteAsignar = n.longValue();
+            c.setCupoMaximo(1);
+        }
+
+        if (!controlador.crearClase(c)) {
+            error(controlador.getMensaje());
+            return;
+        }
+
+        if (idClienteAsignar != null && c.getIdClase() != null) {
+            Long idReserva = controlador.reservarParaCliente(
+                    idClienteAsignar, c.getIdClase().intValue(),
+                    "Clase individual creada desde gestión de clases");
+            if (idReserva == null) {
+                error("Clase creada, pero no se pudo reservar al cliente: "
+                        + controlador.getMensaje());
+                limpiarFormulario();
+                cargarClases();
+                return;
+            }
+            mensaje("Clase individual creada y asignada al cliente. Reserva #"
+                    + idReserva + ".");
+        } else {
+            mensaje("Clase grupal creada correctamente.");
+        }
+        limpiarFormulario();
+        cargarClases();
     }
 
     private void actualizar() {
@@ -345,7 +352,12 @@ public class PnlClasesGrupalesAdministrador extends JPanel {
     }
 
     private void limpiarFormulario(){
-        idClaseSeleccionada=null; tblClases.clearSelection(); txtNombre.setText(""); txtCupo.setText("20");
+        idClaseSeleccionada=null; tblClases.clearSelection(); txtNombre.setText("");
+        chkParaUnCliente.setSelected(false);
+        cboClienteAsignar.setEnabled(false);
+        txtCupo.setEditable(true);
+        txtCupo.setToolTipText(null);
+        txtCupo.setText("20");
         txtDuracion.setText("60"); txtFechaHora.setText(LocalDateTime.now().plusDays(1).withSecond(0).withNano(0).format(FORMATO));
         txtDescripcion.setText(""); cboNivel.setSelectedIndex(0); cboIntensidad.setSelectedIndex(1); chkActiva.setSelected(true);
         if(cboEntrenador.getItemCount()>0)cboEntrenador.setSelectedIndex(0);

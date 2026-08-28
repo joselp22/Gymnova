@@ -54,6 +54,12 @@ public class FrmLogin extends javax.swing.JFrame {
             pnlFondo.getComponentCount() - 1
     );
 
+    // Mismo tamaño que FrmPrincipal para que login y perfiles usen una
+    // sola dimensión consistente. Se centra en pantalla y no se puede
+    // redimensionar desde el login (evita cortes de fondo).
+    setSize(new java.awt.Dimension(1180, 700));
+    setMinimumSize(new java.awt.Dimension(1180, 700));
+    setPreferredSize(new java.awt.Dimension(1180, 700));
     setLocationRelativeTo(null);
     setResizable(false);
 }

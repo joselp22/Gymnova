@@ -64,8 +64,16 @@ public class ConsultaModuloControlador {
             mensaje = "El rol de la sesión no es válido.";
             return new ArrayList<>();
         }
-        if ("ADMINISTRADOR".equals(rol)
-                || "RECEPCIONISTA".equals(rol)) {
+        if ("ADMINISTRADOR".equals(rol)) {
+            return lista;
+        }
+        if ("RECEPCIONISTA".equals(rol)) {
+            // En Finanzas la recepcionista solo debe ver movimientos de
+            // clientes que tengan (o hayan tenido) una membresía. En el
+            // resto de módulos sigue viendo todo.
+            if (esControladorFinanzas(claseControlador)) {
+                return filtrarPorClientesConMembresia(claseControlador, lista);
+            }
             return lista;
         }
         if (!java.util.Set.of("CLIENTE", "ENTRENADOR", "NUTRICIONISTA")
@@ -139,6 +147,130 @@ public class ConsultaModuloControlador {
 
         return fila;
     }
+
+    // ---- Filtro Finanzas para la Recepcionista ----------------------------
+
+    private static boolean esControladorFinanzas(String claseControlador) {
+        return "PagoControlador".equals(claseControlador)
+                || "FacturaControlador".equals(claseControlador)
+                || "DetalleFacturaControlador".equals(claseControlador)
+                || "ComprobanteControlador".equals(claseControlador)
+                || "MetodoPagoControlador".equals(claseControlador);
+    }
+
+    /**
+     * Deja en la lista solo los registros que pertenecen (directa o
+     * indirectamente vía factura/pago) a clientes que tienen al menos
+     * una membresía registrada. MetodoPago no tiene cliente y se
+     * devuelve tal cual: es catálogo global.
+     */
+    private List<?> filtrarPorClientesConMembresia(
+            String claseControlador, List<?> lista) {
+
+        if ("MetodoPagoControlador".equals(claseControlador)) {
+            return lista;
+        }
+        if (lista == null || lista.isEmpty()) {
+            return lista;
+        }
+
+        java.util.Set<Long> clientesConMembresia = new java.util.HashSet<>();
+        java.util.Map<Long, Long> facturaACliente = new java.util.HashMap<>();
+        java.util.Map<Long, Long> pagoACliente = new java.util.HashMap<>();
+
+        try (java.sql.Connection c =
+                    conexion.ConexionPostgreSQL.getConexion()) {
+            try (java.sql.PreparedStatement s = c.prepareStatement(
+                    "SELECT DISTINCT id_cliente FROM membresia")) {
+                try (java.sql.ResultSet r = s.executeQuery()) {
+                    while (r.next()) {
+                        clientesConMembresia.add(r.getLong(1));
+                    }
+                }
+            }
+            // Solo cargamos las tablas puente si hacen falta.
+            if ("PagoControlador".equals(claseControlador)
+                    || "DetalleFacturaControlador".equals(claseControlador)
+                    || "ComprobanteControlador".equals(claseControlador)) {
+                try (java.sql.PreparedStatement s = c.prepareStatement(
+                        "SELECT id_factura, id_cliente FROM factura")) {
+                    try (java.sql.ResultSet r = s.executeQuery()) {
+                        while (r.next()) {
+                            facturaACliente.put(
+                                    r.getLong(1), r.getLong(2));
+                        }
+                    }
+                }
+            }
+            if ("ComprobanteControlador".equals(claseControlador)) {
+                try (java.sql.PreparedStatement s = c.prepareStatement(
+                        "SELECT id_pago, id_factura FROM pago")) {
+                    try (java.sql.ResultSet r = s.executeQuery()) {
+                        while (r.next()) {
+                            Long f = facturaACliente.get(r.getLong(2));
+                            if (f != null) {
+                                pagoACliente.put(r.getLong(1), f);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (java.sql.SQLException ex) {
+            mensaje = "No se pudo aplicar el filtro por clientes con "
+                    + "membresía: " + ex.getMessage();
+            return new ArrayList<>();
+        }
+
+        java.util.List<Object> resultado = new ArrayList<>();
+        for (Object registro : lista) {
+            Long idCliente = idClienteDeRegistro(
+                    claseControlador, registro,
+                    facturaACliente, pagoACliente);
+            if (idCliente != null
+                    && clientesConMembresia.contains(idCliente)) {
+                resultado.add(registro);
+            }
+        }
+        return resultado;
+    }
+
+    private Long idClienteDeRegistro(
+            String claseControlador, Object registro,
+            java.util.Map<Long, Long> facturaACliente,
+            java.util.Map<Long, Long> pagoACliente) {
+
+        switch (claseControlador) {
+            case "FacturaControlador" -> {
+                return invocarLong(registro, "getIdCliente");
+            }
+            case "PagoControlador",
+                 "DetalleFacturaControlador" -> {
+                Long idFactura = invocarLong(registro, "getIdFactura");
+                return idFactura == null ? null : facturaACliente.get(idFactura);
+            }
+            case "ComprobanteControlador" -> {
+                Long idPago = invocarLong(registro, "getIdPago");
+                return idPago == null ? null : pagoACliente.get(idPago);
+            }
+            default -> {
+                return null;
+            }
+        }
+    }
+
+    private Long invocarLong(Object registro, String getter) {
+        try {
+            Object valor = registro.getClass().getMethod(getter).invoke(registro);
+            if (valor instanceof Number n) {
+                return n.longValue();
+            }
+        } catch (ReflectiveOperationException ex) {
+            // Registro sin el getter esperado; se ignora.
+        }
+        return null;
+    }
+
+    // ---- Fin del filtro Finanzas ----------------------------------------
 
     private boolean ejecutarAccion(
             String claseControlador,

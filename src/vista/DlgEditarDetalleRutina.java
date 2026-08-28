@@ -205,6 +205,7 @@ public final class DlgEditarDetalleRutina extends JDialog {
         });
 
         pack();
+        utilidades.EstilosComponentes.uniformarLookAzul(getContentPane());
     }
 
     private void cargarActividades() {

@@ -7,6 +7,8 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import modelo.Cliente;
+import modelo.Nutricionista;
 
 /**
  * Adaptador de consulta para los submódulos administrativos. Mantiene la
@@ -107,6 +109,20 @@ public class ConsultaModuloControlador {
             return new String[]{"Sin registros"};
         }
 
+        if (registro instanceof Cliente) {
+            return new String[]{
+                "ID", "Codigo", "Cedula", "Cliente",
+                "Fecha registro", "Peso inicial", "Peso meta", "Estado"
+            };
+        }
+
+        if (registro instanceof Nutricionista) {
+            return new String[]{
+                "ID", "Codigo empleado", "Cedula", "Nutricionista",
+                "Licencia", "Estado licencia", "Inicio profesion", "Estado"
+            };
+        }
+
         return camposVisibles(registro.getClass()).stream()
                 .map(Field::getName)
                 .map(this::separarNombre)
@@ -114,6 +130,32 @@ public class ConsultaModuloControlador {
     }
 
     public Object[] obtenerFila(Object registro) {
+        if (registro instanceof Cliente c) {
+            return new Object[]{
+                c.getIdPersona(),
+                c.getCodigoCliente(),
+                c.getCedula(),
+                c.getNombreCompleto(),
+                c.getFechaRegistro(),
+                c.getPesoInicial(),
+                c.getPesoMeta(),
+                c.isEstadoCliente() ? "ACTIVO" : "INACTIVO"
+            };
+        }
+
+        if (registro instanceof Nutricionista n) {
+            return new Object[]{
+                n.getIdPersona(),
+                n.getCodigoEmpleado(),
+                n.getCedula(),
+                n.getNombreCompleto(),
+                n.getNumeroLicencia(),
+                n.getEstadoLicencia(),
+                n.getFechaInicioProfesion(),
+                n.isEstadoEmpleado() ? "ACTIVO" : "INACTIVO"
+            };
+        }
+
         List<Field> campos = camposVisibles(registro.getClass());
         Object[] fila = new Object[campos.size()];
 

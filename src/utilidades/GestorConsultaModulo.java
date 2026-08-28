@@ -1,7 +1,7 @@
 package utilidades;
 
-import controlador.AutorizacionControlador;
 import controlador.AlcanceRolControlador;
+import controlador.AutorizacionControlador;
 import controlador.ConsultaModuloControlador;
 import controlador.EditorRegistroControlador;
 import java.util.ArrayList;
@@ -65,49 +65,67 @@ public class GestorConsultaModulo {
             selector.setModel(new javax.swing.DefaultComboBoxModel<>());
             return;
         }
+
         String rol = SesionUsuario.getUsuarioActual().getNombreRol();
         rol = rol == null ? "" : rol.trim().toUpperCase();
+        String modulo = permisoModulo == null ? "" : permisoModulo.trim().toUpperCase();
+
+        java.util.Set<String> permitidos;
+
         if ("ADMINISTRADOR".equals(rol)) {
-            return;
+            // El administrador supervisa todos los procesos visibles del modulo.
+            permitidos = this.controladores.keySet();
+        } else {
+            permitidos = switch (rol + "|" + modulo) {
+                case "RECEPCIONISTA|MEMBRESIAS" -> java.util.Set.of(
+                        "Membresias", "Congelaciones");
+                case "RECEPCIONISTA|ACCESO" -> java.util.Set.of(
+                        "Reservas", "Asistencias", "Clases grupales");
+                case "RECEPCIONISTA|FINANZAS" -> java.util.Set.of(
+                        "Pagos", "Facturas", "Detalle de factura", "Comprobantes");
+                case "RECEPCIONISTA|REPORTES" -> java.util.Set.of(
+                        "Clientes", "Membresias", "Accesos", "Finanzas");
+
+                case "ENTRENADOR|RUTINAS" -> java.util.Set.of(
+                        "Plantillas de rutina", "Asignar rutina a cliente",
+                        "Catalogo de ejercicios", "Calendario semanal",
+                        "Registrar progreso del cliente",
+                        "Ejercicios que componen la rutina");
+                case "ENTRENADOR|SALUD" -> java.util.Set.of(
+                        "Evaluar cliente", "Registrar peso y medidas",
+                        "Resultados de indicadores", "Recomendaciones profesionales");
+                case "ENTRENADOR|REPORTES" -> java.util.Set.of(
+                        "Clientes", "Rutinas", "Salud");
+
+                case "NUTRICIONISTA|NUTRICION" -> java.util.Set.of(
+                        "Clientes",
+                        "Planes asignados a clientes",
+                        "Catalogo de alimentos",
+                        "Catalogo de indicadores",
+                        "Comidas y porciones del plan",
+                        "Resultados de indicadores",
+                        "Recomendaciones profesionales");
+                case "NUTRICIONISTA|SALUD" -> java.util.Set.of(
+                        "Registrar peso y medidas", "Resultados de indicadores",
+                        "Recomendaciones profesionales");
+                case "NUTRICIONISTA|REPORTES" -> java.util.Set.of(
+                        "Clientes", "Salud", "Nutricion");
+
+                case "CLIENTE|ACCESO" -> java.util.Set.of("Reservas");
+                case "CLIENTE|RUTINAS" -> java.util.Set.of(
+                        "Registrar progreso del cliente");
+                case "CLIENTE|REPORTES" -> java.util.Set.of(
+                        "Membresias", "Accesos", "Rutinas", "Salud",
+                        "Nutricion", "Finanzas");
+                default -> java.util.Set.of();
+            };
         }
-        java.util.Set<String> permitidos = switch (rol + "|" + permisoModulo) {
-            case "RECEPCIONISTA|MEMBRESIAS" -> java.util.Set.of(
-                    "Membresias", "Congelaciones");
-            case "RECEPCIONISTA|ACCESO" -> java.util.Set.of(
-                    "Reservas", "Asistencias", "Clases grupales");
-            case "RECEPCIONISTA|FINANZAS" -> java.util.Set.of(
-                    "Pagos", "Facturas", "Detalle de factura",
-                    "Comprobantes");
-            case "RECEPCIONISTA|REPORTES" -> java.util.Set.of(
-                    "Clientes", "Membresias", "Accesos", "Finanzas");
-            case "ENTRENADOR|RUTINAS" -> java.util.Set.of(
-                    "Plantillas de rutina", "Asignar rutina a cliente",
-                    "Catalogo de ejercicios",
-                    "Calendario semanal", "Registrar progreso del cliente",
-                    "Ejercicios que componen la rutina");
-            case "ENTRENADOR|SALUD" -> java.util.Set.of(
-                    "Evaluar cliente", "Registrar peso y medidas",
-                    "Resultados de indicadores", "Recomendaciones profesionales");
-            case "ENTRENADOR|REPORTES" -> java.util.Set.of(
-                    "Clientes", "Rutinas", "Salud");
-            case "NUTRICIONISTA|NUTRICION" -> java.util.Set.of(
-                    "Planes asignados a clientes", "Catalogo de alimentos",
-                    "Comidas y porciones del plan");
-            case "NUTRICIONISTA|SALUD" -> java.util.Set.of(
-                    "Registrar peso y medidas", "Resultados de indicadores",
-                    "Recomendaciones profesionales");
-            case "NUTRICIONISTA|REPORTES" -> java.util.Set.of(
-                    "Clientes", "Salud", "Nutricion");
-            case "CLIENTE|ACCESO" -> java.util.Set.of("Reservas");
-            case "CLIENTE|RUTINAS" -> java.util.Set.of(
-                    "Registrar progreso del cliente");
-            case "CLIENTE|REPORTES" -> java.util.Set.of(
-                    "Membresias", "Accesos", "Rutinas", "Salud",
-                    "Nutricion", "Finanzas");
-            default -> java.util.Set.of();
-        };
+
         this.controladores.entrySet().removeIf(
                 entrada -> !permitidos.contains(entrada.getKey()));
+
+        // Siempre se reemplaza el modelo generado por NetBeans para que la
+        // vista muestre exactamente las opciones autorizadas para la sesion.
         selector.setModel(new javax.swing.DefaultComboBoxModel<>(
                 this.controladores.keySet().toArray(String[]::new)));
     }
@@ -147,10 +165,14 @@ public class GestorConsultaModulo {
                 mapa.put("Recomendaciones profesionales", "RecomendacionControlador");
             }
             case "NUTRICION" -> {
+                mapa.put("Clientes", "ClienteControlador");
                 mapa.put("Planes asignados a clientes", "PlanNutricionalControlador");
                 mapa.put("Catalogo de alimentos", "AlimentoControlador");
+                mapa.put("Catalogo de indicadores", "IndicadorSaludControlador");
                 mapa.put("Comidas y porciones del plan", "IncluyeAlimentoControlador");
-                mapa.put("Nutricionistas habilitados", "NutricionistaControlador");
+                mapa.put("Resultados de indicadores", "ResultadoIndicadorControlador");
+                mapa.put("Recomendaciones profesionales", "RecomendacionControlador");
+                mapa.put("Nutricionistas", "NutricionistaControlador");
             }
             case "FINANZAS" -> {
                 mapa.put("Pagos", "PagoControlador");
@@ -320,26 +342,46 @@ public class GestorConsultaModulo {
         if (!SesionUsuario.haySesionActiva()) {
             return false;
         }
+
         String rol = SesionUsuario.getUsuarioActual().getNombreRol();
         rol = rol == null ? "" : rol.trim().toUpperCase();
         String actual = controladorActual();
+        String modulo = permisoModulo == null ? "" : permisoModulo.trim().toUpperCase();
 
-        if (!java.util.Set.of("ADMINISTRADOR", "RECEPCIONISTA",
-                "ENTRENADOR", "NUTRICIONISTA", "CLIENTE").contains(rol)) {
+        if (!java.util.Set.of(
+                "ADMINISTRADOR", "RECEPCIONISTA", "ENTRENADOR",
+                "NUTRICIONISTA", "CLIENTE").contains(rol)) {
             return false;
         }
 
-        if ("ADMINISTRADOR".equals(rol) || "VER".equalsIgnoreCase(accion)) {
+        // Toda opcion que ya fue filtrada para el rol puede consultarse.
+        if ("VER".equalsIgnoreCase(accion)) {
             return true;
         }
+
+        // En Nutricion el Administrador supervisa todo, pero solo administra
+        // los catalogos globales de alimentos e indicadores.
+        if ("ADMINISTRADOR".equals(rol)) {
+            if ("NUTRICION".equals(modulo)) {
+                return java.util.Set.of(
+                        "AlimentoControlador",
+                        "IndicadorSaludControlador"
+                ).contains(actual);
+            }
+            return true;
+        }
+
+        // Ningun rol operativo elimina fisicamente registros.
         if ("ELIMINAR".equalsIgnoreCase(accion)) {
             return false;
         }
+
         if ("CLIENTE".equals(rol)) {
             return java.util.Set.of(
                     "ReservaControlador", "ProgresoRutinaControlador"
             ).contains(actual);
         }
+
         if ("RECEPCIONISTA".equals(rol)) {
             return java.util.Set.of(
                     "MembresiaControlador", "CongelacionControlador",
@@ -349,6 +391,7 @@ public class GestorConsultaModulo {
                     "AplicaDescuentoControlador"
             ).contains(actual);
         }
+
         if ("ENTRENADOR".equals(rol)) {
             return java.util.Set.of(
                     "RutinaControlador", "AsignacionRutinaControlador",
@@ -364,17 +407,20 @@ public class GestorConsultaModulo {
                     "RecomendacionControlador"
             ).contains(actual);
         }
+
         if ("NUTRICIONISTA".equals(rol)) {
+            // El nutricionista consulta Clientes, Alimentos e Indicadores,
+            // pero no modifica esos catalogos. Opera sus planes, comidas,
+            // resultados y recomendaciones.
             return java.util.Set.of(
                     "PlanNutricionalControlador",
                     "IncluyeAlimentoControlador",
-                    "AlimentoControlador",
-                    "AlimentoAlergenoControlador",
-                    "MedicionCorporalControlador",
                     "ResultadoIndicadorControlador",
-                    "RecomendacionControlador"
+                    "RecomendacionControlador",
+                    "MedicionCorporalControlador"
             ).contains(actual);
         }
+
         return false;
     }
 
