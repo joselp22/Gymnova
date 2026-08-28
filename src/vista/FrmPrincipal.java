@@ -85,8 +85,11 @@ public class FrmPrincipal extends javax.swing.JFrame {
             evento -> mostrarClientes()
     );
 
-    setMinimumSize(new java.awt.Dimension(1180, 700));
-    setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+    // Tamaño estándar de las pantallas internas: más largo verticalmente
+    // para que las tablas y formularios respiren y no aparezca el scroll
+    // vertical de entrada. El usuario puede maximizar manualmente.
+    setMinimumSize(new java.awt.Dimension(1366, 900));
+    setSize(new java.awt.Dimension(1366, 900));
     setLocationRelativeTo(null);
 }
     private void volverAlLogin() {
@@ -484,6 +487,11 @@ private void mostrarSoloRol(javax.swing.JButton... visibles) {
             java.awt.BorderLayout.CENTER
     );
 
+    // Uniforma el look: fondo azul claro y celdas de tabla centradas
+    // con encabezados azules estándar en toda la vista mostrada. Se
+    // aplica al final para pillar las tablas cuyo modelo se creó recién.
+    utilidades.EstilosComponentes.uniformarLookAzul(vista);
+
     lblTituloSeccion.setText(titulo + tituloClienteAtendido());
 
     marcarBotonActivo(botonActivo);
@@ -873,6 +881,7 @@ private void mostrarGestionClientes() {
         }
         mostrarVista(panelMembresias, "Membresias", btnMembresias);
     }
+
     private void mostrarAcceso() {
         if (!verificarRutaRol("ACCESO")) {
             return;
@@ -892,11 +901,29 @@ private void mostrarGestionClientes() {
             return;
         }
 
-        // Recepción conserva el control operativo de reservas/asistencias.
+        // Recepción conserva el control operativo de reservas/asistencias
+        // y además tiene la gestión de clases (como el administrador),
+        // presentadas en dos pestañas dentro del módulo Acceso.
         if (!verificarPermisoVista("ACCESO", "VER")) {
             return;
         }
+        if ("RECEPCIONISTA".equals(rolVentana)) {
+            mostrarAccesoRecepcion();
+            return;
+        }
         mostrarGestionAcceso();
+    }
+
+    private void mostrarAccesoRecepcion() {
+        // Sin pestañas: la recepcionista ve directamente el panel de
+        // gestión de clases (mismo que ve el administrador).
+        if (panelClasesGrupalesAdministrador == null) {
+            panelClasesGrupalesAdministrador =
+                    new PnlClasesGrupalesAdministrador();
+        } else {
+            panelClasesGrupalesAdministrador.refrescarDatos();
+        }
+        mostrarVista(panelClasesGrupalesAdministrador, "Clases", btnAcceso);
     }
 
     private void mostrarClasesGrupalesAdministrador() {

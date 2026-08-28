@@ -244,6 +244,7 @@ public final class DlgRutinaEntrenador extends JDialog {
 
         pack();
         ajustarTamanoInicial();
+        utilidades.EstilosComponentes.uniformarLookAzul(getContentPane());
     }
 
     private void cargarDatosRutina() {

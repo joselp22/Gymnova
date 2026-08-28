@@ -40,7 +40,141 @@ public final class EstilosComponentes {
     private static final Color ICONO
             = new Color(107, 127, 153);
 
+    /** Color base del fondo azul claro que usan las vistas principales. */
+    public static final Color FONDO_AZUL_CLARO = new Color(234, 242, 251);
+
+    /** Color base del encabezado azul oscuro de las tablas. */
+    public static final Color ENCABEZADO_TABLA_AZUL = new Color(10, 58, 108);
+
+    /** Color de selección de fila (mismo tono que el resto del sistema). */
+    public static final Color SELECCION_TABLA = new Color(220, 238, 255);
+
     private EstilosComponentes() {
+    }
+
+    /**
+     * Centra el contenido de todas las columnas de la tabla y aplica el
+     * estilo azul consistente con el resto de la aplicación:
+     *   * encabezado azul oscuro con texto blanco centrado,
+     *   * filas más altas,
+     *   * sin líneas de cuadrícula,
+     *   * selección con el mismo tono azul claro.
+     *
+     * Idempotente: se puede llamar varias veces sobre la misma tabla y
+     * sobre modelos que se reemplazan (para eso hay que volver a llamar
+     * después de sustituir el TableModel).
+     */
+    public static void centrarTabla(javax.swing.JTable tabla) {
+        if (tabla == null) {
+            return;
+        }
+        javax.swing.table.DefaultTableCellRenderer centro
+                = new javax.swing.table.DefaultTableCellRenderer();
+        centro.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        // setDefaultRenderer sobrevive a cambios de modelo (setModel), así
+        // los paneles que recargan sus datos mantienen el centrado.
+        tabla.setDefaultRenderer(Object.class, centro);
+        tabla.setDefaultRenderer(String.class, centro);
+        tabla.setDefaultRenderer(Number.class, centro);
+        tabla.setDefaultRenderer(Integer.class, centro);
+        tabla.setDefaultRenderer(Long.class, centro);
+        tabla.setDefaultRenderer(java.math.BigDecimal.class, centro);
+        tabla.setDefaultRenderer(java.time.LocalDate.class, centro);
+        tabla.setDefaultRenderer(java.time.LocalDateTime.class, centro);
+        // También aplicamos a las columnas ya existentes por si alguna
+        // ya tenía un renderer específico que no queremos conservar.
+        for (int i = 0; i < tabla.getColumnCount(); i++) {
+            javax.swing.table.TableCellRenderer actual = tabla
+                    .getColumnModel().getColumn(i).getCellRenderer();
+            if (actual == null
+                    || actual instanceof javax.swing.table.DefaultTableCellRenderer) {
+                tabla.getColumnModel().getColumn(i).setCellRenderer(centro);
+            }
+        }
+        tabla.setRowHeight(Math.max(tabla.getRowHeight(), 30));
+        tabla.setShowGrid(false);
+        tabla.setFillsViewportHeight(true);
+        tabla.setSelectionBackground(SELECCION_TABLA);
+        tabla.setSelectionForeground(new Color(23, 42, 67));
+
+        javax.swing.table.JTableHeader cabecera = tabla.getTableHeader();
+        if (cabecera != null) {
+            cabecera.setPreferredSize(new java.awt.Dimension(
+                    cabecera.getPreferredSize().width, 40));
+            cabecera.setReorderingAllowed(false);
+            javax.swing.table.DefaultTableCellRenderer estilo
+                    = new javax.swing.table.DefaultTableCellRenderer();
+            estilo.setOpaque(true);
+            estilo.setBackground(ENCABEZADO_TABLA_AZUL);
+            estilo.setForeground(Color.WHITE);
+            estilo.setFont(new java.awt.Font("SansSerif",
+                    java.awt.Font.BOLD, 12));
+            estilo.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+            cabecera.setDefaultRenderer(estilo);
+        }
+    }
+
+    /**
+     * Aplica a un contenedor el fondo azul claro estándar del sistema.
+     * Útil para forzar el mismo look en vistas que quedaron con el gris
+     * del Look and Feel.
+     */
+    public static void aplicarFondoAzul(JComponent panel) {
+        if (panel == null) {
+            return;
+        }
+        panel.setBackground(FONDO_AZUL_CLARO);
+        panel.setOpaque(true);
+    }
+
+    /**
+     * Recorre recursivamente el contenedor y aplica el tema azul y el
+     * centrado de tablas a todos los componentes que encuentre. Se usa
+     * desde FrmPrincipal cada vez que se muestra una vista para
+     * uniformar el look sin tocar cada .form individualmente.
+     */
+    public static void uniformarLookAzul(java.awt.Component raiz) {
+        if (raiz == null) {
+            return;
+        }
+        if (raiz instanceof javax.swing.JTable tabla) {
+            centrarTabla(tabla);
+        }
+        if (raiz instanceof javax.swing.JScrollPane sp) {
+            sp.setBorder(sp.getBorder() == null
+                    ? javax.swing.BorderFactory.createLineBorder(
+                            new Color(212, 225, 239))
+                    : sp.getBorder());
+            if (sp.getViewport() != null
+                    && sp.getViewport().getView() instanceof javax.swing.JTable) {
+                sp.getViewport().setBackground(Color.WHITE);
+            }
+        }
+        // Solo repintamos el fondo azul si el componente sigue con el
+        // color por defecto del look (gris claro del Nimbus/system). Así
+        // no aplastamos paneles que ya definieron sus propios colores.
+        if (raiz instanceof javax.swing.JPanel panel) {
+            Color actual = panel.getBackground();
+            if (esColorPorDefecto(actual)) {
+                panel.setBackground(FONDO_AZUL_CLARO);
+            }
+        }
+        if (raiz instanceof java.awt.Container c) {
+            for (java.awt.Component hijo : c.getComponents()) {
+                uniformarLookAzul(hijo);
+            }
+        }
+    }
+
+    private static boolean esColorPorDefecto(Color c) {
+        if (c == null) {
+            return true;
+        }
+        // Gris típico de Metal/Nimbus/System sin tocar.
+        int r = c.getRed(), g = c.getGreen(), b = c.getBlue();
+        return (r == g && g == b) // grises puros
+                || (Math.abs(r - g) < 10 && Math.abs(g - b) < 10
+                    && r >= 200 && r <= 245); // grises casi-neutros
     }
 
     public static void aplicarCampoUsuario(

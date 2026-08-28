@@ -140,6 +140,7 @@ public final class DlgDetalleRutina extends JDialog {
 
         add(contenido, BorderLayout.CENTER);
         pack();
+        utilidades.EstilosComponentes.uniformarLookAzul(getContentPane());
     }
 
     private void configurarTabla() {

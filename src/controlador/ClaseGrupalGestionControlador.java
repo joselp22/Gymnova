@@ -22,8 +22,8 @@ public class ClaseGrupalGestionControlador {
 
     public boolean crearClase(ClaseGrupal clase) {
         mensaje = "";
-        if (!esRol("ADMINISTRADOR")) {
-            mensaje = "Solo el Administrador puede crear clases grupales.";
+        if (!puedeGestionarClases()) {
+            mensaje = "Solo el Administrador o el Recepcionista pueden crear clases.";
             return false;
         }
         boolean ok = claseControlador.registrar(clase);
@@ -33,8 +33,8 @@ public class ClaseGrupalGestionControlador {
 
     public boolean actualizarClase(ClaseGrupal clase) {
         mensaje = "";
-        if (!esRol("ADMINISTRADOR")) {
-            mensaje = "Solo el Administrador puede actualizar clases grupales.";
+        if (!puedeGestionarClases()) {
+            mensaje = "Solo el Administrador o el Recepcionista pueden actualizar clases.";
             return false;
         }
         try {
@@ -59,8 +59,8 @@ public class ClaseGrupalGestionControlador {
 
     public boolean desactivarClase(Long idClase) {
         mensaje = "";
-        if (!esRol("ADMINISTRADOR")) {
-            mensaje = "Solo el Administrador puede desactivar clases grupales.";
+        if (!puedeGestionarClases()) {
+            mensaje = "Solo el Administrador o el Recepcionista pueden desactivar clases.";
             return false;
         }
         boolean ok = claseControlador.desactivar(idClase);
@@ -180,7 +180,7 @@ public class ClaseGrupalGestionControlador {
 
     public List<ParticipanteClaseGrupal> listarParticipantesAdministracion(Long idClase) {
         mensaje = "";
-        if (!esRol("ADMINISTRADOR") || idClase == null) return new ArrayList<>();
+        if (!puedeGestionarClases() || idClase == null) return new ArrayList<>();
         try {
             return dao.listarParticipantes(idClase);
         } catch (SQLException ex) {
@@ -210,6 +210,15 @@ public class ClaseGrupalGestionControlador {
                 && SesionUsuario.getUsuarioActual() != null
                 && esperado.equals(NavegacionRol.normalizarRol(
                         SesionUsuario.getUsuarioActual().getNombreRol()));
+    }
+
+    /**
+     * La gestión de clases (crear / actualizar / desactivar / asignar) ahora
+     * también la hace el Recepcionista. Sustituye a las comprobaciones que
+     * antes exigían únicamente ADMINISTRADOR.
+     */
+    private boolean puedeGestionarClases() {
+        return esRol("ADMINISTRADOR") || esRol("RECEPCIONISTA");
     }
 
     public String getMensaje() {

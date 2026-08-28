@@ -22,10 +22,13 @@ public class ClaseGrupalDAO {
 
     public boolean guardar(ClaseGrupal claseGrupal) throws SQLException {
 
+        // Devolvemos el id generado por la BD y lo asignamos al modelo
+        // para que quien llame pueda encadenar operaciones (por ejemplo,
+        // registrar la reserva individual de la clase recién creada).
         String sql = "INSERT INTO clase_grupal "
                 + "(nombre_clase, descripcion, nivel, duracion_base_minutos, "
                 + "intensidad, id_entrenador, cupo_maximo, fecha_hora, estado_clase) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id_clase";
 
         try (Connection conexion = ConexionPostgreSQL.getConexion();
              PreparedStatement sentencia = conexion.prepareStatement(sql)) {
@@ -40,7 +43,13 @@ public class ClaseGrupalDAO {
             sentencia.setTimestamp(8, Timestamp.valueOf(claseGrupal.getFechaHora()));
             sentencia.setBoolean(9, claseGrupal.isEstadoClase());
 
-            return sentencia.executeUpdate() > 0;
+            try (ResultSet r = sentencia.executeQuery()) {
+                if (r.next()) {
+                    claseGrupal.setIdClase(r.getLong(1));
+                    return true;
+                }
+                return false;
+            }
         }
     }
 
