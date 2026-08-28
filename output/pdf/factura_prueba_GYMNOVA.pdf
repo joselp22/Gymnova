@@ -1,0 +1,78 @@
+%PDF-1.4
+%GYMNOVA
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [5 0 R ] >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1629 >>
+stream
+0.02 0.17 0.35 rg
+35 755 525 55 re f
+1.0 1.0 1.0 rg
+BT /F2 22 Tf 52 785 Td (GYMNOVA) Tj ET
+BT /F1 9 Tf 52 768 Td (Sistema integrado de gimnasio) Tj ET
+BT /F2 15 Tf 390 785 Td (FACTURA) Tj ET
+BT /F1 9 Tf 390 770 Td (FAC-00002) Tj ET
+0.05 0.12 0.23 rg
+BT /F2 10 Tf 42 730 Td (DATOS DEL CLIENTE) Tj ET
+BT /F1 9 Tf 42 712 Td (Cliente: Rolando Navarro) Tj ET
+BT /F1 9 Tf 42 697 Td (Cedula: 0107160509) Tj ET
+BT /F1 9 Tf 42 682 Td (Correo: rolando.@gmail.com) Tj ET
+BT /F1 9 Tf 330 712 Td (Fecha: 2026-08-11) Tj ET
+BT /F1 9 Tf 330 697 Td (Estado: PAGADA) Tj ET
+BT /F1 9 Tf 330 682 Td (Pagina: 1 de 1) Tj ET
+0.03 0.39 0.85 rg
+35 645 525 24 re f
+1.0 1.0 1.0 rg
+BT /F2 8 Tf 43 653 Td (CONCEPTO) Tj ET
+BT /F2 8 Tf 235 653 Td (REFERENCIA) Tj ET
+BT /F2 8 Tf 345 653 Td (CANT.) Tj ET
+BT /F2 8 Tf 405 653 Td (PRECIO) Tj ET
+BT /F2 8 Tf 490 653 Td (IMP.) Tj ET
+0.08 0.16 0.27 rg
+BT /F1 8 Tf 43 625 Td (MEMBRESIA) Tj ET
+BT /F1 8 Tf 235 625 Td (MB00002) Tj ET
+BT /F1 8 Tf 355 625 Td (1) Tj ET
+BT /F1 8 Tf 405 625 Td ($ 45.00) Tj ET
+BT /F1 8 Tf 500 625 Td ($ 12.00%) Tj ET
+0.82 0.87 0.93 rg
+35 618 m 560 618 l S
+0.05 0.12 0.23 rg
+BT /F1 10 Tf 385 234 Td (Subtotal: $ 45.00) Tj ET
+BT /F1 10 Tf 385 216 Td (Descuento: $ 0.00) Tj ET
+BT /F1 10 Tf 385 198 Td (Impuesto: $ 5.40) Tj ET
+BT /F2 13 Tf 385 177 Td (TOTAL: $ 50.40) Tj ET
+BT /F1 9 Tf 42 216 Td (Pagado: $ 50.40) Tj ET
+BT /F1 9 Tf 42 198 Td (Saldo: $ 0.00) Tj ET
+0.38 0.46 0.57 rg
+BT /F1 8 Tf 42 42 Td (Documento academico/no tributario - No sustituye comprobante electronico autorizado por el SRI.) Tj ET
+BT /F1 8 Tf 42 28 Td (Generado por GYMNOVA desde datos almacenados en PostgreSQL.) Tj ET
+
+endstream
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000018 00000 n 
+0000000067 00000 n 
+0000000125 00000 n 
+0000000195 00000 n 
+0000000270 00000 n 
+0000000406 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+2087
+%%EOF

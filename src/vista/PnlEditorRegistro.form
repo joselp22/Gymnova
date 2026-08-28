@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Form version="1.5" maxVersion="1.9" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
+  <Properties>
+    <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="ff" red="ff" type="rgb"/></Property>
+    <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor"><Border info="org.netbeans.modules.form.compat2.border.EmptyBorderInfo"><EmptyBorder bottom="14" left="16" right="16" top="14"/></Border></Property>
+  </Properties>
+  <AuxValues>
+    <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_generateFQN" type="java.lang.Boolean" value="true"/>
+    <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
+  </AuxValues>
+  <Layout class="java.awt.BorderLayout">
+    <Property name="verticalGap" type="int" value="12"/>
+  </Layout>
+  <SubComponents>
+    <Component class="javax.swing.JLabel" name="lblTitulo">
+      <Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="19" style="1"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="43" green="2a" red="17" type="rgb"/></Property><Property name="text" type="java.lang.String" value="Datos del registro"/></Properties>
+      <Constraints><Constraint layoutClass="java.awt.BorderLayout" value="java.awt.BorderLayout.NORTH"/></Constraints>
+    </Component>
+    <Container class="javax.swing.JPanel" name="pnlCampos">
+      <Properties><Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="ff" red="ff" type="rgb"/></Property></Properties>
+      <Constraints><Constraint layoutClass="java.awt.BorderLayout" value="java.awt.BorderLayout.CENTER"/></Constraints>
+      <Layout class="java.awt.GridLayout"><Property name="rows" type="int" value="15"/><Property name="columns" type="int" value="2"/><Property name="horizontalGap" type="int" value="12"/><Property name="verticalGap" type="int" value="8"/></Layout>
+      <SubComponents>
+        <Component class="javax.swing.JLabel" name="lblCampo1"><Properties><Property name="text" type="java.lang.String" value="Campo 1"/></Properties></Component><Component class="javax.swing.JTextField" name="txtCampo1"/>
+        <Component class="javax.swing.JLabel" name="lblCampo2"><Properties><Property name="text" type="java.lang.String" value="Campo 2"/></Properties></Component><Component class="javax.swing.JTextField" name="txtCampo2"/>
+        <Component class="javax.swing.JLabel" name="lblCampo3"><Properties><Property name="text" type="java.lang.String" value="Campo 3"/></Properties></Component><Component class="javax.swing.JTextField" name="txtCampo3"/>
+        <Component class="javax.swing.JLabel" name="lblCampo4"><Properties><Property name="text" type="java.lang.String" value="Campo 4"/></Properties></Component><Component class="javax.swing.JTextField" name="txtCampo4"/>
+        <Component class="javax.swing.JLabel" name="lblCampo5"><Properties><Property name="text" type="java.lang.String" value="Campo 5"/></Properties></Component><Component class="javax.swing.JTextField" name="txtCampo5"/>
+        <Component class="javax.swing.JLabel" name="lblCampo6"><Properties><Property name="text" type="java.lang.String" value="Campo 6"/></Properties></Component><Component class="javax.swing.JTextField" name="txtCampo6"/>
+        <Component class="javax.swing.JLabel" name="lblCampo7"><Properties><Property name="text" type="java.lang.String" value="Campo 7"/></Properties></Component><Component class="javax.swing.JTextField" name="txtCampo7"/>
+        <Component class="javax.swing.JLabel" name="lblCampo8"><Properties><Property name="text" type="java.lang.String" value="Campo 8"/></Properties></Component><Component class="javax.swing.JTextField" name="txtCampo8"/>
+        <Component class="javax.swing.JLabel" name="lblCampo9"><Properties><Property name="text" type="java.lang.String" value="Campo 9"/></Properties></Component><Component class="javax.swing.JTextField" name="txtCampo9"/>
+        <Component class="javax.swing.JLabel" name="lblCampo10"><Properties><Property name="text" type="java.lang.String" value="Campo 10"/></Properties></Component><Component class="javax.swing.JTextField" name="txtCampo10"/>
+        <Component class="javax.swing.JLabel" name="lblCampo11"><Properties><Property name="text" type="java.lang.String" value="Campo 11"/></Properties></Component><Component class="javax.swing.JTextField" name="txtCampo11"/>
+        <Component class="javax.swing.JLabel" name="lblCampo12"><Properties><Property name="text" type="java.lang.String" value="Campo 12"/></Properties></Component><Component class="javax.swing.JTextField" name="txtCampo12"/>
+        <Component class="javax.swing.JLabel" name="lblCampo13"><Properties><Property name="text" type="java.lang.String" value="Campo 13"/></Properties></Component><Component class="javax.swing.JTextField" name="txtCampo13"/>
+        <Component class="javax.swing.JLabel" name="lblCampo14"><Properties><Property name="text" type="java.lang.String" value="Campo 14"/></Properties></Component><Component class="javax.swing.JTextField" name="txtCampo14"/>
+        <Component class="javax.swing.JLabel" name="lblCampo15"><Properties><Property name="text" type="java.lang.String" value="Campo 15"/></Properties></Component><Component class="javax.swing.JTextField" name="txtCampo15"/>
+      </SubComponents>
+    </Container>
+    <Component class="javax.swing.JLabel" name="lblAyuda">
+      <Properties><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="99" green="7f" red="6b" type="rgb"/></Property><Property name="text" type="java.lang.String" value="Fechas: AAAA-MM-DD | Relaciones: seleccione por nombre"/></Properties>
+      <Constraints><Constraint layoutClass="java.awt.BorderLayout" value="java.awt.BorderLayout.SOUTH"/></Constraints>
+    </Component>
+  </SubComponents>
+</Form>

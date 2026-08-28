@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Form version="1.3" maxVersion="1.9" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
+  <Properties>
+    <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="14" green="7" red="2" type="rgb"/></Property>
+    <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor"><Dimension value="[950, 600]"/></Property>
+    <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor"><Dimension value="[1280, 720]"/></Property>
+  </Properties>
+  <AuxValues>
+    <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_autoSetComponentName" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_generateFQN" type="java.lang.Boolean" value="true"/>
+    <AuxValue name="FormSettings_generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_i18nAutoMode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_layoutCodeTarget" type="java.lang.Integer" value="1"/>
+    <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
+  </AuxValues>
+  <Layout>
+    <DimensionLayout dim="0">
+      <Group type="103" groupAlignment="0" attributes="0">
+        <Group type="102" attributes="0">
+          <EmptySpace min="-2" pref="20" max="-2" attributes="0"/>
+          <Group type="103" groupAlignment="0" attributes="0">
+            <Component id="lblBienvenida" min="-2" max="-2" attributes="0"/>
+            <Component id="lblSubtitulo" min="-2" max="-2" attributes="0"/>
+            <Group type="102" attributes="0">
+              <Component id="pnlTarjetaClientes" pref="288" max="32767" attributes="0"/>
+              <EmptySpace min="-2" pref="14" max="-2" attributes="0"/>
+              <Component id="pnlTarjetaMembresias" pref="288" max="32767" attributes="0"/>
+              <EmptySpace min="-2" pref="14" max="-2" attributes="0"/>
+              <Component id="pnlTarjetaPagos" pref="288" max="32767" attributes="0"/>
+              <EmptySpace min="-2" pref="14" max="-2" attributes="0"/>
+              <Component id="pnlTarjetaRutinas" pref="288" max="32767" attributes="0"/>
+            </Group>
+            <Group type="102" attributes="0">
+              <Component id="pnlUltimosClientes" max="32767" attributes="0"/>
+              <EmptySpace min="-2" pref="16" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="0" attributes="0">
+                <Component id="pnlResumenRapido" max="32767" attributes="0"/>
+                <Component id="pnlGraficoSemanal" max="32767" attributes="0"/>
+              </Group>
+            </Group>
+          </Group>
+          <EmptySpace min="-2" pref="20" max="-2" attributes="0"/>
+        </Group>
+      </Group>
+    </DimensionLayout>
+    <DimensionLayout dim="1">
+      <Group type="103" groupAlignment="0" attributes="0">
+        <Group type="102" attributes="0">
+          <EmptySpace min="-2" pref="20" max="-2" attributes="0"/>
+          <Component id="lblBienvenida" min="-2" max="-2" attributes="0"/>
+          <EmptySpace min="-2" pref="4" max="-2" attributes="0"/>
+          <Component id="lblSubtitulo" min="-2" max="-2" attributes="0"/>
+          <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
+          <Group type="103" groupAlignment="0" attributes="0">
+            <Component id="pnlTarjetaClientes" min="-2" pref="145" max="-2" attributes="0"/>
+            <Component id="pnlTarjetaMembresias" min="-2" pref="145" max="-2" attributes="0"/>
+            <Component id="pnlTarjetaPagos" min="-2" pref="145" max="-2" attributes="0"/>
+            <Component id="pnlTarjetaRutinas" min="-2" pref="145" max="-2" attributes="0"/>
+          </Group>
+          <EmptySpace min="-2" pref="16" max="-2" attributes="0"/>
+          <Group type="103" groupAlignment="0" attributes="0">
+            <Component id="pnlUltimosClientes" max="32767" attributes="0"/>
+            <Group type="102" attributes="0">
+              <Component id="pnlResumenRapido" min="-2" max="-2" attributes="0"/>
+              <EmptySpace min="-2" pref="16" max="-2" attributes="0"/>
+              <Component id="pnlGraficoSemanal" max="32767" attributes="0"/>
+            </Group>
+          </Group>
+          <EmptySpace min="-2" pref="20" max="-2" attributes="0"/>
+        </Group>
+      </Group>
+    </DimensionLayout>
+  </Layout>
+  <SubComponents>
+    <Component class="javax.swing.JLabel" name="lblBienvenida">
+      <Properties>
+        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="28" style="1"/></Property>
+        <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="ff" red="ff" type="rgb"/></Property>
+        <Property name="text" type="java.lang.String" value="Mi rutina y progreso"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblSubtitulo">
+      <Properties>
+        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="14" style="0"/></Property>
+        <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="d3" green="bb" red="a9" type="rgb"/></Property>
+        <Property name="text" type="java.lang.String" value="Tu membresia, entrenamiento, reservas y nutricion"/>
+      </Properties>
+    </Component>
+    <Container class="javax.swing.JPanel" name="pnlTarjetaClientes">
+      <Properties>
+        <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="2b" green="15" red="7" type="rgb"/></Property>
+        <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor"><Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo"><LineBorder><Color PropertyName="color" blue="57" green="34" red="17" type="rgb"/></LineBorder></Border></Property>
+      </Properties>
+      <Layout>
+        <DimensionLayout dim="0"><Group type="103" groupAlignment="0" attributes="0"><Group type="102" attributes="0"><EmptySpace min="-2" pref="18" max="-2" attributes="0"/><Component id="lblIconoClientes" min="-2" max="-2" attributes="0"/><EmptySpace min="-2" pref="16" max="-2" attributes="0"/><Group type="103" groupAlignment="0" attributes="0"><Component id="lblTituloClientes" min="-2" max="-2" attributes="0"/><Component id="lblClientesActivos" min="-2" max="-2" attributes="0"/><Component id="lblEstadoClientes" min="-2" max="-2" attributes="0"/></Group><EmptySpace pref="18" max="32767" attributes="0"/></Group></Group></DimensionLayout>
+        <DimensionLayout dim="1"><Group type="103" groupAlignment="0" attributes="0"><Group type="102" attributes="0"><EmptySpace min="-2" pref="20" max="-2" attributes="0"/><Group type="103" groupAlignment="0" attributes="0"><Component id="lblIconoClientes" min="-2" max="-2" attributes="0"/><Group type="102" attributes="0"><Component id="lblTituloClientes" min="-2" max="-2" attributes="0"/><EmptySpace min="-2" pref="6" max="-2" attributes="0"/><Component id="lblClientesActivos" min="-2" max="-2" attributes="0"/></Group></Group><EmptySpace min="-2" pref="15" max="-2" attributes="0"/><Component id="lblEstadoClientes" min="-2" max="-2" attributes="0"/><EmptySpace pref="16" max="32767" attributes="0"/></Group></Group></DimensionLayout>
+      </Layout>
+      <SubComponents>
+        <Component class="javax.swing.JLabel" name="lblIconoClientes"><Properties><Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="4c" green="26" red="9" type="rgb"/></Property><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="26" style="1"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="7c" red="8" type="rgb"/></Property><Property name="horizontalAlignment" type="int" value="0"/><Property name="opaque" type="boolean" value="true"/><Property name="text" type="java.lang.String" value="&#x25cf;"/><Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor"><Dimension value="[62, 62]"/></Property></Properties></Component>
+        <Component class="javax.swing.JLabel" name="lblTituloClientes"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="14" style="0"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ef" green="dc" red="cd" type="rgb"/></Property><Property name="text" type="java.lang.String" value="Mi membresia activa"/></Properties></Component>
+        <Component class="javax.swing.JLabel" name="lblClientesActivos"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="26" style="1"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="ff" red="ff" type="rgb"/></Property><Property name="text" type="java.lang.String" value="0"/></Properties></Component>
+        <Component class="javax.swing.JLabel" name="lblEstadoClientes"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="11" style="0"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="76" green="e6" red="0" type="rgb"/></Property><Property name="text" type="java.lang.String" value="&#x2191; 12% vs. mes anterior"/></Properties></Component>
+      </SubComponents>
+    </Container>
+    <Container class="javax.swing.JPanel" name="pnlTarjetaMembresias">
+      <Properties><Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="2b" green="15" red="7" type="rgb"/></Property><Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor"><Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo"><LineBorder><Color PropertyName="color" blue="57" green="34" red="17" type="rgb"/></LineBorder></Border></Property></Properties>
+      <Layout><DimensionLayout dim="0"><Group type="103" groupAlignment="0" attributes="0"><Group type="102" attributes="0"><EmptySpace min="-2" pref="18" max="-2" attributes="0"/><Component id="lblIconoMembresias" min="-2" max="-2" attributes="0"/><EmptySpace min="-2" pref="16" max="-2" attributes="0"/><Group type="103" groupAlignment="0" attributes="0"><Component id="lblTituloMembresias"/><Component id="lblMembresiasActivas"/><Component id="lblEstadoMembresias"/></Group><EmptySpace pref="18" max="32767"/></Group></Group></DimensionLayout><DimensionLayout dim="1"><Group type="103" groupAlignment="0"><Group type="102"><EmptySpace min="-2" pref="20" max="-2"/><Group type="103" groupAlignment="0"><Component id="lblIconoMembresias"/><Group type="102"><Component id="lblTituloMembresias"/><EmptySpace min="-2" pref="6" max="-2"/><Component id="lblMembresiasActivas"/></Group></Group><EmptySpace min="-2" pref="15" max="-2"/><Component id="lblEstadoMembresias"/><EmptySpace pref="16" max="32767"/></Group></Group></DimensionLayout></Layout>
+      <SubComponents>
+        <Component class="javax.swing.JLabel" name="lblIconoMembresias"><Properties><Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="4c" green="26" red="9" type="rgb"/></Property><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="26" style="1"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="7c" red="8" type="rgb"/></Property><Property name="horizontalAlignment" type="int" value="0"/><Property name="opaque" type="boolean" value="true"/><Property name="text" type="java.lang.String" value="&#x25a3;"/><Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor"><Dimension value="[62, 62]"/></Property></Properties></Component>
+        <Component class="javax.swing.JLabel" name="lblTituloMembresias"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="14" style="0"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ef" green="dc" red="cd" type="rgb"/></Property><Property name="text" type="java.lang.String" value="Membresias activas"/></Properties></Component>
+        <Component class="javax.swing.JLabel" name="lblMembresiasActivas"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="26" style="1"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="ff" red="ff" type="rgb"/></Property><Property name="text" type="java.lang.String" value="0"/></Properties></Component>
+        <Component class="javax.swing.JLabel" name="lblEstadoMembresias"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="11" style="0"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="76" green="e6" red="0" type="rgb"/></Property><Property name="text" type="java.lang.String" value="&#x2191; 9% vs. mes anterior"/></Properties></Component>
+      </SubComponents>
+    </Container>
+    <Container class="javax.swing.JPanel" name="pnlTarjetaPagos">
+      <Properties><Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="2b" green="15" red="7" type="rgb"/></Property><Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor"><Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo"><LineBorder><Color PropertyName="color" blue="57" green="34" red="17" type="rgb"/></LineBorder></Border></Property></Properties>
+      <Layout><DimensionLayout dim="0"><Group type="103" groupAlignment="0"><Group type="102"><EmptySpace min="-2" pref="18" max="-2"/><Component id="lblIconoPagos"/><EmptySpace min="-2" pref="16" max="-2"/><Group type="103" groupAlignment="0"><Component id="lblTituloPagos"/><Component id="lblPagosMes"/><Component id="lblEstadoPagos"/></Group><EmptySpace pref="18" max="32767"/></Group></Group></DimensionLayout><DimensionLayout dim="1"><Group type="103" groupAlignment="0"><Group type="102"><EmptySpace min="-2" pref="20" max="-2"/><Group type="103" groupAlignment="0"><Component id="lblIconoPagos"/><Group type="102"><Component id="lblTituloPagos"/><EmptySpace min="-2" pref="6" max="-2"/><Component id="lblPagosMes"/></Group></Group><EmptySpace min="-2" pref="15" max="-2"/><Component id="lblEstadoPagos"/><EmptySpace pref="16" max="32767"/></Group></Group></DimensionLayout></Layout>
+      <SubComponents>
+        <Component class="javax.swing.JLabel" name="lblIconoPagos"><Properties><Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="4c" green="26" red="9" type="rgb"/></Property><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="26" style="1"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="7c" red="8" type="rgb"/></Property><Property name="horizontalAlignment" type="int" value="0"/><Property name="opaque" type="boolean" value="true"/><Property name="text" type="java.lang.String" value="$"/><Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor"><Dimension value="[62, 62]"/></Property></Properties></Component>
+        <Component class="javax.swing.JLabel" name="lblTituloPagos"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="14" style="0"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ef" green="dc" red="cd" type="rgb"/></Property><Property name="text" type="java.lang.String" value="Pagos del mes"/></Properties></Component>
+        <Component class="javax.swing.JLabel" name="lblPagosMes"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="26" style="1"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="ff" red="ff" type="rgb"/></Property><Property name="text" type="java.lang.String" value="$0.00"/></Properties></Component>
+        <Component class="javax.swing.JLabel" name="lblEstadoPagos"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="11" style="0"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="76" green="e6" red="0" type="rgb"/></Property><Property name="text" type="java.lang.String" value="&#x2191; 15% vs. mes anterior"/></Properties></Component>
+      </SubComponents>
+    </Container>
+    <Container class="javax.swing.JPanel" name="pnlTarjetaRutinas">
+      <Properties><Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="2b" green="15" red="7" type="rgb"/></Property><Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor"><Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo"><LineBorder><Color PropertyName="color" blue="57" green="34" red="17" type="rgb"/></LineBorder></Border></Property></Properties>
+      <Layout><DimensionLayout dim="0"><Group type="103" groupAlignment="0"><Group type="102"><EmptySpace min="-2" pref="18" max="-2"/><Component id="lblIconoRutinas"/><EmptySpace min="-2" pref="16" max="-2"/><Group type="103" groupAlignment="0"><Component id="lblTituloRutinas"/><Component id="lblRutinasAsignadas"/><Component id="lblEstadoRutinas"/></Group><EmptySpace pref="18" max="32767"/></Group></Group></DimensionLayout><DimensionLayout dim="1"><Group type="103" groupAlignment="0"><Group type="102"><EmptySpace min="-2" pref="20" max="-2"/><Group type="103" groupAlignment="0"><Component id="lblIconoRutinas"/><Group type="102"><Component id="lblTituloRutinas"/><EmptySpace min="-2" pref="6" max="-2"/><Component id="lblRutinasAsignadas"/></Group></Group><EmptySpace min="-2" pref="15" max="-2"/><Component id="lblEstadoRutinas"/><EmptySpace pref="16" max="32767"/></Group></Group></DimensionLayout></Layout>
+      <SubComponents>
+        <Component class="javax.swing.JLabel" name="lblIconoRutinas"><Properties><Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="4c" green="26" red="9" type="rgb"/></Property><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="26" style="1"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="7c" red="8" type="rgb"/></Property><Property name="horizontalAlignment" type="int" value="0"/><Property name="opaque" type="boolean" value="true"/><Property name="text" type="java.lang.String" value="&#x25c6;"/><Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor"><Dimension value="[62, 62]"/></Property></Properties></Component>
+        <Component class="javax.swing.JLabel" name="lblTituloRutinas"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="14" style="0"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ef" green="dc" red="cd" type="rgb"/></Property><Property name="text" type="java.lang.String" value="Rutinas asignadas"/></Properties></Component>
+        <Component class="javax.swing.JLabel" name="lblRutinasAsignadas"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="26" style="1"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="ff" red="ff" type="rgb"/></Property><Property name="text" type="java.lang.String" value="0"/></Properties></Component>
+        <Component class="javax.swing.JLabel" name="lblEstadoRutinas"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="11" style="0"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="76" green="e6" red="0" type="rgb"/></Property><Property name="text" type="java.lang.String" value="&#x2191; 8% vs. semana anterior"/></Properties></Component>
+      </SubComponents>
+    </Container>
+    <Container class="javax.swing.JPanel" name="pnlUltimosClientes">
+      <Properties><Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="2b" green="15" red="7" type="rgb"/></Property><Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor"><Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo"><LineBorder><Color PropertyName="color" blue="57" green="34" red="17" type="rgb"/></LineBorder></Border></Property></Properties>
+      <Layout><DimensionLayout dim="0"><Group type="103" groupAlignment="0"><Group type="102"><EmptySpace min="-2" pref="18" max="-2"/><Group type="103" groupAlignment="0"><Component id="lblTituloUltimos"/><Component id="jScrollPaneUltimos" pref="654" max="32767"/><Component id="lblVerClientes" max="32767"/></Group><EmptySpace min="-2" pref="18" max="-2"/></Group></Group></DimensionLayout><DimensionLayout dim="1"><Group type="103" groupAlignment="0"><Group type="102"><EmptySpace min="-2" pref="18" max="-2"/><Component id="lblTituloUltimos"/><EmptySpace min="-2" pref="16" max="-2"/><Component id="jScrollPaneUltimos" pref="290" max="32767"/><EmptySpace min="-2" pref="14" max="-2"/><Component id="lblVerClientes" min="-2" pref="32" max="-2"/><EmptySpace min="-2" pref="14" max="-2"/></Group></Group></DimensionLayout></Layout>
+      <SubComponents>
+        <Component class="javax.swing.JLabel" name="lblTituloUltimos"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="16" style="1"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="ff" red="ff" type="rgb"/></Property><Property name="text" type="java.lang.String" value="Ultimos clientes registrados"/></Properties></Component>
+        <Container class="javax.swing.JScrollPane" name="jScrollPaneUltimos"><Properties><Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor"><Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo"><LineBorder><Color PropertyName="color" blue="57" green="34" red="17" type="rgb"/></LineBorder></Border></Property></Properties><AuxValues><AuxValue name="autoScrollPane" type="java.lang.Boolean" value="true"/></AuxValues><Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/><SubComponents><Component class="javax.swing.JTable" name="tblUltimosClientes"><Properties><Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="2b" green="15" red="7" type="rgb"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="eb" red="dc" type="rgb"/></Property><Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor"><Table columnCount="6" rowCount="0"><Column editable="false" title="#" type="java.lang.Object"/><Column editable="false" title="Nombre" type="java.lang.Object"/><Column editable="false" title="Detalle" type="java.lang.Object"/><Column editable="false" title="Referencia" type="java.lang.Object"/><Column editable="false" title="Fecha" type="java.lang.Object"/><Column editable="false" title="Estado" type="java.lang.Object"/></Table></Property></Properties></Component></SubComponents></Container>
+        <Component class="javax.swing.JLabel" name="lblVerClientes"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="13" style="1"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="7c" red="8" type="rgb"/></Property><Property name="text" type="java.lang.String" value="Ver todos los clientes                                      &#x203a;"/></Properties></Component>
+      </SubComponents>
+    </Container>
+    <Container class="javax.swing.JPanel" name="pnlResumenRapido">
+      <Properties><Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="2b" green="15" red="7" type="rgb"/></Property><Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor"><Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo"><LineBorder><Color PropertyName="color" blue="57" green="34" red="17" type="rgb"/></LineBorder></Border></Property></Properties>
+      <Layout><DimensionLayout dim="0"><Group type="103" groupAlignment="0"><Group type="102"><EmptySpace min="-2" pref="18" max="-2"/><Group type="103" groupAlignment="0"><Component id="lblTituloResumen"/><Component id="lblResumenClientes" pref="380" max="32767"/><Component id="lblResumenMembresias" max="32767"/><Component id="lblResumenRutinas" max="32767"/><Component id="lblResumenIngresos" max="32767"/></Group><EmptySpace min="-2" pref="18" max="-2"/></Group></Group></DimensionLayout><DimensionLayout dim="1"><Group type="103" groupAlignment="0"><Group type="102"><EmptySpace min="-2" pref="16" max="-2"/><Component id="lblTituloResumen"/><EmptySpace min="-2" pref="15" max="-2"/><Component id="lblResumenClientes"/><EmptySpace min="-2" pref="13" max="-2"/><Component id="lblResumenMembresias"/><EmptySpace min="-2" pref="13" max="-2"/><Component id="lblResumenRutinas"/><EmptySpace min="-2" pref="13" max="-2"/><Component id="lblResumenIngresos"/><EmptySpace pref="16" max="32767"/></Group></Group></DimensionLayout></Layout>
+      <SubComponents>
+        <Component class="javax.swing.JLabel" name="lblTituloResumen"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="16" style="1"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="ff" red="ff" type="rgb"/></Property><Property name="text" type="java.lang.String" value="Resumen rapido"/></Properties></Component>
+        <Component class="javax.swing.JLabel" name="lblResumenClientes"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="12" style="0"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="eb" red="dc" type="rgb"/></Property><Property name="text" type="java.lang.String" value="Nuevos clientes (este mes)                         0"/></Properties></Component>
+        <Component class="javax.swing.JLabel" name="lblResumenMembresias"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="12" style="0"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="eb" red="dc" type="rgb"/></Property><Property name="text" type="java.lang.String" value="Membresias por vencer                                0"/></Properties></Component>
+        <Component class="javax.swing.JLabel" name="lblResumenRutinas"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="12" style="0"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="eb" red="dc" type="rgb"/></Property><Property name="text" type="java.lang.String" value="Rutinas pendientes                                      0"/></Properties></Component>
+        <Component class="javax.swing.JLabel" name="lblResumenIngresos"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="12" style="0"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="eb" red="dc" type="rgb"/></Property><Property name="text" type="java.lang.String" value="Ingresos pendientes                                  $0.00"/></Properties></Component>
+      </SubComponents>
+    </Container>
+    <Container class="javax.swing.JPanel" name="pnlGraficoSemanal">
+      <Properties><Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="2b" green="15" red="7" type="rgb"/></Property><Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor"><Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo"><LineBorder><Color PropertyName="color" blue="57" green="34" red="17" type="rgb"/></LineBorder></Border></Property></Properties>
+      <Layout><DimensionLayout dim="0"><Group type="103" groupAlignment="0"><Group type="102"><EmptySpace min="-2" pref="18" max="-2"/><Group type="103" groupAlignment="0"><Component id="lblTituloGrafico"/><Component id="lblGraficoResumen" pref="380" max="32767"/><Component id="lblDiasGrafico" max="32767"/></Group><EmptySpace min="-2" pref="18" max="-2"/></Group></Group></DimensionLayout><DimensionLayout dim="1"><Group type="103" groupAlignment="0"><Group type="102"><EmptySpace min="-2" pref="16" max="-2"/><Component id="lblTituloGrafico"/><EmptySpace min="-2" pref="22" max="-2"/><Component id="lblGraficoResumen" min="-2" pref="55" max="-2"/><EmptySpace min="-2" pref="10" max="-2"/><Component id="lblDiasGrafico"/><EmptySpace pref="18" max="32767"/></Group></Group></DimensionLayout></Layout>
+      <SubComponents>
+        <Component class="javax.swing.JLabel" name="lblTituloGrafico"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="16" style="1"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="ff" red="ff" type="rgb"/></Property><Property name="text" type="java.lang.String" value="Actividad semanal"/></Properties></Component>
+        <Component class="javax.swing.JLabel" name="lblGraficoResumen"><Properties><Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor"><Font name="SansSerif" size="22" style="1"/></Property><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="ff" green="7c" red="8" type="rgb"/></Property><Property name="horizontalAlignment" type="int" value="0"/><Property name="text" type="java.lang.String" value="&#x25cf;&#x2500;&#x2500;&#x25cf;&#x2500;&#x2500;&#x25cf;&#x2500;&#x2500;&#x2500;&#x2500;&#x25cf;&#x2500;&#x2500;&#x25cf;&#x2500;&#x2500;&#x2500;&#x2500;&#x25cf;&#x2500;&#x2500;&#x25cf;"/></Properties></Component>
+        <Component class="javax.swing.JLabel" name="lblDiasGrafico"><Properties><Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor"><Color blue="d3" green="bb" red="a9" type="rgb"/></Property><Property name="horizontalAlignment" type="int" value="0"/><Property name="text" type="java.lang.String" value="Lun      Mar      Mie      Jue      Vie      Sab      Dom"/></Properties></Component>
+      </SubComponents>
+    </Container>
+  </SubComponents>
+</Form>
