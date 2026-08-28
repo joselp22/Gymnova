@@ -61,12 +61,14 @@ public class PnlNutricion extends JPanel {
         "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO"
     });
     private final JComboBox<String> cboComida = new JComboBox<>(new String[]{
-        "DESAYUNO", "MEDIA_MANANA", "ALMUERZO", "MERIENDA", "CENA", "OTRO"
+        // Debe coincidir con ck_incluye_alimento_tipo_comida en la BD.
+        // "OTRO" no está permitido; se usa "SNACK".
+        "DESAYUNO", "MEDIA_MANANA", "ALMUERZO", "MERIENDA", "CENA", "SNACK"
     });
-    private final JComboBox<Alimento> cboAlimento = new JComboBox<>();
+    private final JTextField txtNombreAlimento = NutricionistaUI.campo();
     private final JTextField txtCantidad = NutricionistaUI.campo();
     private final JTextField txtUnidad = NutricionistaUI.campo();
-    private final JTextField txtHora = NutricionistaUI.campo();
+    private final javax.swing.JSpinner spnHora = crearSpinnerHora();
     private final JTextField txtOrden = NutricionistaUI.campo();
     private final JTextArea txtIndicaciones = NutricionistaUI.area(3);
     private final JTable tblComidas = new JTable();
@@ -83,6 +85,10 @@ public class PnlNutricion extends JPanel {
     public PnlNutricion() {
         construir();
         eventos();
+        // Selector de calendario para los campos de fecha del plan
+        // y para la hora de consumo dentro de la pestaña Alimentación.
+        utilidades.CalendarioSelector.vincularFecha(txtFechaInicio);
+        utilidades.CalendarioSelector.vincularFecha(txtFechaFin);
         refrescarDatos();
     }
 
@@ -162,29 +168,87 @@ public class PnlNutricion extends JPanel {
     private JPanel crearAlimentacion() {
         JPanel p = panelPestana();
         JPanel form = NutricionistaUI.tarjeta();
-        form.setLayout(new BorderLayout(0, 10));
-        form.add(NutricionistaUI.tituloSeccion("Alimentación del plan activo"), BorderLayout.NORTH);
-        JPanel campos = new JPanel(new GridLayout(2, 4, 10, 8));
+        form.setLayout(new BorderLayout(0, 8));
+        form.add(NutricionistaUI.tituloSeccion("Alimentación del plan activo"),
+                BorderLayout.NORTH);
+
+        // Layout compacto con GridBagLayout: 4 columnas de campos, labels
+        // pequeños encima de cada control, filas ajustadas. Indicaciones va
+        // ocupando toda la fila inferior con altura reducida.
+        JPanel campos = new JPanel(new java.awt.GridBagLayout());
         campos.setOpaque(false);
-        agregarCampo(campos, "Día *", cboDia);
-        agregarCampo(campos, "Tipo de comida *", cboComida);
-        agregarCampo(campos, "Alimento *", cboAlimento);
-        agregarCampo(campos, "Cantidad *", txtCantidad);
-        agregarCampo(campos, "Unidad *", txtUnidad);
-        agregarCampo(campos, "Hora (HH:MM)", txtHora);
-        agregarCampo(campos, "Orden *", txtOrden);
-        JPanel obs = new JPanel(new BorderLayout(0, 4));
+        java.awt.Insets ins = new java.awt.Insets(4, 6, 4, 6);
+
+        celda(campos, "Día",         cboDia,             0, 0, ins);
+        celda(campos, "Tipo comida", cboComida,          1, 0, ins);
+        celda(campos, "Alimento",    txtNombreAlimento,  2, 0, ins);
+        celda(campos, "Cantidad",    txtCantidad,        3, 0, ins);
+
+        celda(campos, "Unidad",      txtUnidad,          0, 1, ins);
+        celda(campos, "Hora",        spnHora,            1, 1, ins);
+        celda(campos, "Orden",       txtOrden,           2, 1, ins);
+
+        // Indicaciones ocupando 2 columnas para no cortar el texto.
+        java.awt.GridBagConstraints gbcInd = new java.awt.GridBagConstraints();
+        gbcInd.gridx = 3;   gbcInd.gridy = 1;
+        gbcInd.gridwidth = 1;
+        gbcInd.fill = java.awt.GridBagConstraints.BOTH;
+        gbcInd.weightx = 1;
+        gbcInd.insets = ins;
+        JPanel obs = new JPanel(new BorderLayout(0, 2));
         obs.setOpaque(false);
-        obs.add(NutricionistaUI.etiqueta("Indicaciones"), BorderLayout.NORTH);
-        obs.add(new JScrollPane(txtIndicaciones), BorderLayout.CENTER);
-        campos.add(obs);
+        obs.add(etiquetaCompacta("Indicaciones"), BorderLayout.NORTH);
+        JScrollPane sc = new JScrollPane(txtIndicaciones);
+        sc.setPreferredSize(new java.awt.Dimension(200, 44));
+        obs.add(sc, BorderLayout.CENTER);
+        campos.add(obs, gbcInd);
+
         form.add(campos, BorderLayout.CENTER);
-        form.add(NutricionistaUI.filaBotones(btnAgregarComida, btnModificarComida), BorderLayout.SOUTH);
+        form.add(NutricionistaUI.filaBotones(btnAgregarComida, btnModificarComida),
+                BorderLayout.SOUTH);
         p.add(form, BorderLayout.NORTH);
 
         NutricionistaUI.tabla(tblComidas);
         p.add(NutricionistaUI.scrollTabla(tblComidas), BorderLayout.CENTER);
         return p;
+    }
+
+    /** Añade una celda "label pequeño arriba + campo" en el grid. */
+    private void celda(JPanel panel, String etiqueta, java.awt.Component campo,
+            int x, int y, java.awt.Insets ins) {
+        java.awt.GridBagConstraints g = new java.awt.GridBagConstraints();
+        g.gridx = x; g.gridy = y;
+        g.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        g.weightx = 1;
+        g.insets = ins;
+        JPanel wrap = new JPanel(new BorderLayout(0, 2));
+        wrap.setOpaque(false);
+        wrap.add(etiquetaCompacta(etiqueta), BorderLayout.NORTH);
+        wrap.add(campo, BorderLayout.CENTER);
+        panel.add(wrap, g);
+    }
+
+    private JLabel etiquetaCompacta(String t) {
+        JLabel l = new JLabel(t);
+        l.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 11));
+        l.setForeground(NutricionistaUI.TEXTO_SECUNDARIO);
+        return l;
+    }
+
+    /** Selector tipo reloj (spinner de tiempo HH:mm) para la hora de consumo. */
+    private static javax.swing.JSpinner crearSpinnerHora() {
+        javax.swing.SpinnerDateModel modelo =
+                new javax.swing.SpinnerDateModel();
+        javax.swing.JSpinner s = new javax.swing.JSpinner(modelo);
+        s.setEditor(new javax.swing.JSpinner.DateEditor(s, "HH:mm"));
+        // Arranca en 08:00 para que no aparezca la hora del sistema.
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 8);
+        cal.set(java.util.Calendar.MINUTE, 0);
+        cal.set(java.util.Calendar.SECOND, 0);
+        cal.set(java.util.Calendar.MILLISECOND, 0);
+        s.setValue(cal.getTime());
+        return s;
     }
 
     private JPanel crearIndicadoresConsulta() {
@@ -255,7 +319,6 @@ public class PnlNutricion extends JPanel {
                 : "Ningún cliente seleccionado. Seleccione uno desde Mis clientes.");
         habilitarTrabajo(hay);
         cargarPlanes();
-        cargarAlimentos();
         cargarComidas();
         cargarConsultas();
     }
@@ -348,19 +411,10 @@ public class PnlNutricion extends JPanel {
         if (ok) { limpiarPlan(); refrescarDatos(); }
     }
 
-    private void cargarAlimentos() {
-        Alimento actual = (Alimento) cboAlimento.getSelectedItem();
-        DefaultComboBoxModel<Alimento> m = new DefaultComboBoxModel<>();
-        for (Alimento a : controlador.listarAlimentos("")) m.addElement(a);
-        cboAlimento.setModel(m);
-        if (actual != null) {
-            for (int i = 0; i < m.getSize(); i++) {
-                if (m.getElementAt(i).getIdAlimento().equals(actual.getIdAlimento())) {
-                    cboAlimento.setSelectedIndex(i); break;
-                }
-            }
-        }
-    }
+    // El combo de alimentos se reemplazó por un campo de texto libre
+    // (txtNombreAlimento). Cuando el nutricionista guarda la comida, el
+    // controlador busca el alimento por nombre y lo crea si no existe
+    // (obtenerOCrearAlimento). Por eso ya no hay carga de catálogo aquí.
 
     private void cargarComidas() {
         comidas = controlador.listarComidasPlanActivo();
@@ -386,10 +440,11 @@ public class PnlNutricion extends JPanel {
         comidaSeleccionada = comidas.get(m);
         cboDia.setSelectedItem(comidaSeleccionada.getDiaSemana());
         cboComida.setSelectedItem(comidaSeleccionada.getTipoComida());
-        seleccionarAlimento(comidaSeleccionada.getIdAlimento());
+        txtNombreAlimento.setText(controlador.nombreAlimento(
+                comidaSeleccionada.getIdAlimento()));
         txtCantidad.setText(valor(comidaSeleccionada.getCantidad()));
         txtUnidad.setText(valor(comidaSeleccionada.getUnidadMedida()));
-        txtHora.setText(valor(comidaSeleccionada.getHoraConsumo()));
+        establecerHoraSpinner(comidaSeleccionada.getHoraConsumo());
         txtOrden.setText(valor(comidaSeleccionada.getOrdenComida()));
         txtIndicaciones.setText(valor(comidaSeleccionada.getIndicaciones()));
         btnModificarComida.setEnabled(true);
@@ -397,16 +452,22 @@ public class PnlNutricion extends JPanel {
 
     private void agregarComida() {
         try {
-            Alimento a = (Alimento) cboAlimento.getSelectedItem();
-            if (a == null) throw new IllegalArgumentException("Seleccione un alimento.");
+            String nombre = requerido(txtNombreAlimento.getText(),
+                    "Escriba el nombre del alimento.");
+            Long idAlimento = controlador.obtenerOCrearAlimento(nombre);
+            if (idAlimento == null) {
+                throw new IllegalArgumentException(controlador.getMensaje().isBlank()
+                        ? "No se pudo registrar el alimento."
+                        : controlador.getMensaje());
+            }
             Long id = controlador.agregarComida(
                     String.valueOf(cboDia.getSelectedItem()),
                     String.valueOf(cboComida.getSelectedItem()),
-                    horaOpcional(txtHora.getText()),
+                    horaSpinner(),
                     decimalRequerido(txtCantidad.getText(), "Cantidad"),
                     requerido(txtUnidad.getText(), "Ingrese la unidad de medida."),
                     enteroRequerido(txtOrden.getText(), "Orden"),
-                    a.getIdAlimento(), texto(txtIndicaciones.getText()));
+                    idAlimento, texto(txtIndicaciones.getText()));
             informar(id != null);
             if (id != null) { limpiarComida(); cargarComidas(); }
         } catch (IllegalArgumentException ex) { advertencia(ex.getMessage()); }
@@ -415,20 +476,50 @@ public class PnlNutricion extends JPanel {
     private void modificarComida() {
         if (comidaSeleccionada == null) return;
         try {
-            Alimento a = (Alimento) cboAlimento.getSelectedItem();
-            if (a == null) throw new IllegalArgumentException("Seleccione un alimento.");
+            String nombre = requerido(txtNombreAlimento.getText(),
+                    "Escriba el nombre del alimento.");
+            Long idAlimento = controlador.obtenerOCrearAlimento(nombre);
+            if (idAlimento == null) {
+                throw new IllegalArgumentException(controlador.getMensaje().isBlank()
+                        ? "No se pudo registrar el alimento."
+                        : controlador.getMensaje());
+            }
             comidaSeleccionada.setDiaSemana(String.valueOf(cboDia.getSelectedItem()));
             comidaSeleccionada.setTipoComida(String.valueOf(cboComida.getSelectedItem()));
-            comidaSeleccionada.setIdAlimento(a.getIdAlimento());
+            comidaSeleccionada.setIdAlimento(idAlimento);
             comidaSeleccionada.setCantidad(decimalRequerido(txtCantidad.getText(), "Cantidad"));
             comidaSeleccionada.setUnidadMedida(requerido(txtUnidad.getText(), "Ingrese la unidad de medida."));
-            comidaSeleccionada.setHoraConsumo(horaOpcional(txtHora.getText()));
+            comidaSeleccionada.setHoraConsumo(horaSpinner());
             comidaSeleccionada.setOrdenComida(enteroRequerido(txtOrden.getText(), "Orden"));
             comidaSeleccionada.setIndicaciones(texto(txtIndicaciones.getText()));
             boolean ok = controlador.modificarComida(comidaSeleccionada);
             informar(ok);
             if (ok) { limpiarComida(); cargarComidas(); }
         } catch (IllegalArgumentException ex) { advertencia(ex.getMessage()); }
+    }
+
+    /** Lee la hora seleccionada en el spinner-reloj como LocalTime. */
+    private LocalTime horaSpinner() {
+        Object v = spnHora.getValue();
+        if (!(v instanceof java.util.Date d)) {
+            return null;
+        }
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTime(d);
+        return LocalTime.of(
+                cal.get(java.util.Calendar.HOUR_OF_DAY),
+                cal.get(java.util.Calendar.MINUTE));
+    }
+
+    /** Pone el spinner-reloj en la hora indicada (o 08:00 si es null). */
+    private void establecerHoraSpinner(LocalTime hora) {
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        LocalTime h = hora == null ? LocalTime.of(8, 0) : hora;
+        cal.set(java.util.Calendar.HOUR_OF_DAY, h.getHour());
+        cal.set(java.util.Calendar.MINUTE, h.getMinute());
+        cal.set(java.util.Calendar.SECOND, 0);
+        cal.set(java.util.Calendar.MILLISECOND, 0);
+        spnHora.setValue(cal.getTime());
     }
 
     private void cargarConsultas() {
@@ -465,15 +556,10 @@ public class PnlNutricion extends JPanel {
 
     private void limpiarComida() {
         comidaSeleccionada = null;
-        txtCantidad.setText(""); txtUnidad.setText(""); txtHora.setText("");
+        txtNombreAlimento.setText("");
+        txtCantidad.setText(""); txtUnidad.setText("");
+        establecerHoraSpinner(null);
         txtOrden.setText(""); txtIndicaciones.setText(""); tblComidas.clearSelection();
-    }
-
-    private void seleccionarAlimento(Long id) {
-        for (int i = 0; i < cboAlimento.getItemCount(); i++) {
-            Alimento a = cboAlimento.getItemAt(i);
-            if (a != null && a.getIdAlimento().equals(id)) { cboAlimento.setSelectedIndex(i); return; }
-        }
     }
 
     private String requerido(String s, String msg) {

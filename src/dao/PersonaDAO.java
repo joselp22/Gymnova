@@ -347,6 +347,9 @@ public class PersonaDAO {
         public List<Persona> listarDisponiblesParaCliente()
         throws SQLException {
 
+    // Devuelve TODAS las personas activas. El módulo Clientes bloquea la
+    // duplicación con un mensaje amistoso cuando ya existe un cliente
+    // para esa persona, en vez de ocultarla del combo.
     String sql = """
             SELECT
                 p.id_persona,
@@ -361,11 +364,6 @@ public class PersonaDAO {
                 p.estado
             FROM persona p
             WHERE p.estado = TRUE
-              AND NOT EXISTS (
-                  SELECT 1
-                  FROM cliente c
-                  WHERE c.id_persona = p.id_persona
-              )
             ORDER BY p.apellidos,
                      p.nombres
             """;
@@ -400,6 +398,10 @@ public class PersonaDAO {
         public List<Persona> listarDisponiblesParaEmpleado()
         throws SQLException {
 
+    // Devuelve TODAS las personas activas para que el selector del panel
+    // Personal muestre siempre el universo completo. La restricción "no
+    // duplicar empleado" se aplica en EmpleadoControlador.registrar
+    // (mensaje amistoso) y como red de seguridad en el PK del empleado.
     String sql = """
             SELECT
                 p.id_persona,
@@ -414,11 +416,6 @@ public class PersonaDAO {
                 p.estado
             FROM persona p
             WHERE p.estado = TRUE
-              AND NOT EXISTS (
-                  SELECT 1
-                  FROM empleado e
-                  WHERE e.id_persona = p.id_persona
-              )
             ORDER BY p.apellidos,
                      p.nombres
             """;

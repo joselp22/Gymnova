@@ -20,50 +20,64 @@ public class AlimentoDAO {
             Alimento alimento
     ) throws SQLException {
 
-        String sql = "INSERT INTO alimento (nombre_alimento, categoria, descripcion, porcion_referencia_g, proteinas_g, carbohidratos_g, fibra_g) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        // Ahora devuelve además el id generado en el objeto para que el
+        // flujo de nutrición pueda encadenar la creación de la comida.
+        String sql = "INSERT INTO alimento (nombre_alimento, categoria, descripcion, porcion_referencia_g, proteinas_g, carbohidratos_g, fibra_g) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id_alimento";
 
         try (
             Connection conexion = ConexionPostgreSQL.getConexion();
             PreparedStatement sentencia = conexion.prepareStatement(sql)
         ) {
 
-            sentencia.setString(
-                    1,
-                    alimento.getNombreAlimento()
-            );
+            sentencia.setString(1, alimento.getNombreAlimento());
+            sentencia.setString(2, alimento.getCategoria());
+            sentencia.setString(3, alimento.getDescripcion());
+            sentencia.setBigDecimal(4, alimento.getPorcionReferenciaG());
+            sentencia.setBigDecimal(5, alimento.getProteinasG());
+            sentencia.setBigDecimal(6, alimento.getCarbohidratosG());
+            sentencia.setBigDecimal(7, alimento.getFibraG());
 
-            sentencia.setString(
-                    2,
-                    alimento.getCategoria()
-            );
-
-            sentencia.setString(
-                    3,
-                    alimento.getDescripcion()
-            );
-
-            sentencia.setBigDecimal(
-                    4,
-                    alimento.getPorcionReferenciaG()
-            );
-
-            sentencia.setBigDecimal(
-                    5,
-                    alimento.getProteinasG()
-            );
-
-            sentencia.setBigDecimal(
-                    6,
-                    alimento.getCarbohidratosG()
-            );
-
-            sentencia.setBigDecimal(
-                    7,
-                    alimento.getFibraG()
-            );
-
-            return sentencia.executeUpdate() > 0;
+            try (ResultSet r = sentencia.executeQuery()) {
+                if (r.next()) {
+                    alimento.setIdAlimento(r.getLong(1));
+                    return true;
+                }
+                return false;
+            }
         }
+    }
+
+    /**
+     * Busca un alimento por nombre exacto (respetando el UNIQUE de la
+     * tabla). Devuelve null si no existe.
+     */
+    public Alimento buscarPorNombre(String nombre) throws SQLException {
+        if (nombre == null || nombre.isBlank()) {
+            return null;
+        }
+        String sql = "SELECT id_alimento, nombre_alimento, categoria, "
+                + "descripcion, porcion_referencia_g, proteinas_g, "
+                + "carbohidratos_g, fibra_g "
+                + "FROM alimento WHERE LOWER(TRIM(nombre_alimento)) = LOWER(?)";
+        try (Connection c = ConexionPostgreSQL.getConexion();
+             PreparedStatement s = c.prepareStatement(sql)) {
+            s.setString(1, nombre.trim());
+            try (ResultSet r = s.executeQuery()) {
+                if (r.next()) {
+                    Alimento a = new Alimento();
+                    a.setIdAlimento(r.getLong("id_alimento"));
+                    a.setNombreAlimento(r.getString("nombre_alimento"));
+                    a.setCategoria(r.getString("categoria"));
+                    a.setDescripcion(r.getString("descripcion"));
+                    a.setPorcionReferenciaG(r.getBigDecimal("porcion_referencia_g"));
+                    a.setProteinasG(r.getBigDecimal("proteinas_g"));
+                    a.setCarbohidratosG(r.getBigDecimal("carbohidratos_g"));
+                    a.setFibraG(r.getBigDecimal("fibra_g"));
+                    return a;
+                }
+            }
+        }
+        return null;
     }
 
     public boolean modificar(

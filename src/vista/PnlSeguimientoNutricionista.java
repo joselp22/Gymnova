@@ -68,6 +68,9 @@ public class PnlSeguimientoNutricionista extends JPanel {
     public PnlSeguimientoNutricionista() {
         construir();
         eventos();
+        // Calendario para las fechas de inicio/fin de la recomendación.
+        utilidades.CalendarioSelector.vincularFecha(txtInicioRec);
+        utilidades.CalendarioSelector.vincularFecha(txtFinRec);
         refrescarDatos();
     }
 

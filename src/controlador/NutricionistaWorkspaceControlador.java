@@ -457,6 +457,38 @@ public class NutricionistaWorkspaceControlador {
         return a == null ? "Alimento " + idAlimento : a.getNombreAlimento();
     }
 
+    /**
+     * Devuelve el id del alimento cuyo nombre coincide, o crea uno nuevo si
+     * no existe. Sirve para que el panel de Alimentación permita al
+     * nutricionista escribir el nombre libremente en vez de elegir del
+     * combo. Los campos nutricionales quedan vacíos (se pueden completar
+     * después desde el catálogo).
+     */
+    public Long obtenerOCrearAlimento(String nombre) {
+        mensaje = "";
+        if (nombre == null || nombre.isBlank()) {
+            mensaje = "Escriba el nombre del alimento.";
+            return null;
+        }
+        try {
+            dao.AlimentoDAO dao = new dao.AlimentoDAO();
+            modelo.Alimento existente = dao.buscarPorNombre(nombre.trim());
+            if (existente != null) {
+                return existente.getIdAlimento();
+            }
+            modelo.Alimento nuevo = new modelo.Alimento();
+            nuevo.setNombreAlimento(nombre.trim());
+            if (dao.guardar(nuevo) && nuevo.getIdAlimento() != null) {
+                return nuevo.getIdAlimento();
+            }
+            mensaje = "No se pudo registrar el nuevo alimento.";
+            return null;
+        } catch (java.sql.SQLException ex) {
+            mensaje = "No se pudo registrar el alimento: " + ex.getMessage();
+            return null;
+        }
+    }
+
     public String nombreIndicador(Long idIndicador) {
         IndicadorSalud i = indicadorControlador.buscar(idIndicador);
         return i == null ? "Indicador " + idIndicador : i.getNombreIndicador();

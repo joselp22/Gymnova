@@ -48,6 +48,34 @@ public class FlujoNutricionistaControlador {
         try (Connection c = ConexionPostgreSQL.getConexion()) {
             c.setAutoCommit(false);
             try {
+                // El nutricionista debe existir como subtipo de empleado.
+                // Si falta la fila en `nutricionista` pero SÍ existe la de
+                // `empleado`, la creamos aquí mismo con datos por defecto
+                // para no romper el flujo. Solo bloqueamos si tampoco hay
+                // empleado (ahí el Administrador debe darlo de alta).
+                if (!existePerfilNutricionista(c, idNutricionista)) {
+                    if (!existeEmpleado(c, idNutricionista)) {
+                        c.rollback();
+                        mensaje = "Tu usuario tiene rol NUTRICIONISTA pero "
+                                + "no está registrado como empleado en la BD. "
+                                + "Pide al Administrador que te dé de alta "
+                                + "desde el módulo Personal.";
+                        return null;
+                    }
+                    try (PreparedStatement s = c.prepareStatement(
+                            "INSERT INTO nutricionista ("
+                            + "id_persona, numero_licencia, "
+                            + "fecha_inicio_profesion, estado_licencia) "
+                            + "VALUES (?, ?, CURRENT_DATE, 'ACTIVA')")) {
+                        s.setLong(1, idNutricionista);
+                        s.setString(2, "LIC-"
+                                + String.format("%06d", idNutricionista));
+                        s.executeUpdate();
+                    }
+                    Auditoria.exito("NUTRICION", "AUTO_ALTA_NUTRICIONISTA",
+                            "Se creó automáticamente el subtipo nutricionista "
+                            + "para persona " + idNutricionista + ".");
+                }
                 // Finaliza planes ACTIVOS previos del cliente
                 try (PreparedStatement s = c.prepareStatement(
                         "UPDATE plan_nutricional SET estado_plan = 'FINALIZADO', "
@@ -246,6 +274,28 @@ public class FlujoNutricionistaControlador {
             Auditoria.fallo("SALUD", "RESULTADO_INDICADOR", mensaje,
                     ex.getMessage());
             return null;
+        }
+    }
+
+    private boolean existePerfilNutricionista(Connection c, long idPersona)
+            throws SQLException {
+        try (PreparedStatement s = c.prepareStatement(
+                "SELECT 1 FROM nutricionista WHERE id_persona = ?")) {
+            s.setLong(1, idPersona);
+            try (ResultSet r = s.executeQuery()) {
+                return r.next();
+            }
+        }
+    }
+
+    private boolean existeEmpleado(Connection c, long idPersona)
+            throws SQLException {
+        try (PreparedStatement s = c.prepareStatement(
+                "SELECT 1 FROM empleado WHERE id_persona = ?")) {
+            s.setLong(1, idPersona);
+            try (ResultSet r = s.executeQuery()) {
+                return r.next();
+            }
         }
     }
 
