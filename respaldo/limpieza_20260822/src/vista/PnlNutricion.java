@@ -1,39 +1,142 @@
 /* GYMNOVA - Vista administrativa: NUTRICION. */
 package vista;
 
+import controlador.FormularioModuloDirectoControlador;
 import utilidades.GestorConsultaModulo;
 
+/**
+ * Vista del modulo Nutricion.
+ *
+ * ADMINISTRADOR:
+ * - Catalogo de alimentos.
+ * - Catalogo de indicadores de salud.
+ *
+ * NUTRICIONISTA:
+ * - Planes asignados a clientes.
+ * - Comidas y porciones del plan.
+ */
 public class PnlNutricion extends javax.swing.JPanel {
 
     private final GestorConsultaModulo gestorConsulta;
+    private final FormularioModuloDirectoControlador formularioDirecto;
 
     public PnlNutricion() {
         initComponents();
+
         gestorConsulta = new GestorConsultaModulo(
-                this, cboTipoContrato, tblPersonal, txtBuscarPersonal,
-                lblCantidadPersonal, "NUTRICION",
+                this,
+                cboTipoContrato,
+                tblPersonal,
+                txtBuscarPersonal,
+                lblCantidadPersonal,
+                "NUTRICION",
                 GestorConsultaModulo.controladoresPara("NUTRICION")
         );
+
+        formularioDirecto = new FormularioModuloDirectoControlador(
+                this,
+                "NUTRICION",
+                gestorConsulta,
+                pnlFormularioPersonal,
+                cboTipoContrato,
+                tblPersonal,
+                lblCodigoEmpleado,
+                txtCodigoEmpleado,
+                lblFechaIngreso,
+                txtFechaIngreso,
+                lblSalario,
+                txtSalario,
+                lblPersona,
+                cboPersona,
+                lblCedulaPersona,
+                txtCedulaPersona,
+                lblTurno,
+                txtTurno,
+                chkEstadoEmpleado
+        );
+
+        configurarTituloSegunRol();
         configurarEstilos();
         configurarTabla();
-        btnBuscarPersonal.addActionListener(evento -> buscarRegistros());
-        cboTipoContrato.addActionListener(evento -> refrescarDatos());
-        txtCodigoEmpleado.setEditable(false);
-        txtCedulaPersona.setEditable(false);
+        configurarEventos();
+
         btnEliminar.setVisible(esAdministrador());
+
+        formularioDirecto.configurarFormulario();
         habilitarAcciones();
         refrescarDatos();
     }
 
+    private void configurarTituloSegunRol() {
+        if (esAdministrador()) {
+            lblTituloPersonal.setText("Supervision y catalogos de nutricion");
+            lblTituloFormulario.setText("Nutricion - supervision administrativa");
+            lblBuscarPersonal.setText("Buscar clientes, planes, alimentos, indicadores o profesionales...");
+        } else if (esNutricionista()) {
+            lblTituloPersonal.setText("Gestion nutricional");
+            lblTituloFormulario.setText("Atencion y seguimiento nutricional");
+            lblBuscarPersonal.setText("Buscar clientes, planes, comidas, resultados o recomendaciones...");
+        } else {
+            lblTituloPersonal.setText("Nutricion");
+            lblTituloFormulario.setText("Consulta nutricional");
+        }
+    }
+
+    private void configurarEventos() {
+        btnBuscarPersonal.addActionListener(evento -> buscarRegistros());
+
+        cboTipoContrato.addActionListener(evento -> {
+            formularioDirecto.configurarFormulario();
+            habilitarAcciones();
+            refrescarDatos();
+        });
+    }
+
     private void habilitarAcciones() {
-        btnGuardar.setEnabled(true);
-        btnModificar.setEnabled(true);
-        btnDesactivar.setEnabled(true);
-        btnEliminar.setEnabled(esAdministrador());
+        String proceso = procesoActual();
+
+        boolean editableAdmin = esAdministrador()
+                && java.util.Set.of(
+                        "Catalogo de alimentos",
+                        "Catalogo de indicadores"
+                ).contains(proceso);
+
+        boolean editableNutricionista = esNutricionista()
+                && java.util.Set.of(
+                        "Planes asignados a clientes",
+                        "Comidas y porciones del plan",
+                        "Resultados de indicadores",
+                        "Recomendaciones profesionales"
+                ).contains(proceso);
+
+        boolean editable = editableAdmin || editableNutricionista;
+
+        btnGuardar.setEnabled(editable);
+        btnModificar.setEnabled(editable);
+        formularioDirecto.establecerSoloLectura(!editable);
+
+        boolean desactivarIndicador = esAdministrador()
+                && "Catalogo de indicadores".equals(proceso);
+        boolean finalizarPlan = esNutricionista()
+                && "Planes asignados a clientes".equals(proceso);
+
+        btnDesactivar.setVisible(desactivarIndicador || finalizarPlan);
+        btnDesactivar.setEnabled(desactivarIndicador || finalizarPlan);
+        btnDesactivar.setText(finalizarPlan ? "Finalizar plan" : "Desactivar");
+
+        boolean eliminarCatalogo = esAdministrador()
+                && java.util.Set.of(
+                        "Catalogo de alimentos",
+                        "Catalogo de indicadores"
+                ).contains(proceso);
+
+        btnEliminar.setVisible(eliminarCatalogo);
+        btnEliminar.setEnabled(eliminarCatalogo);
     }
 
     public void refrescarDatos() {
         gestorConsulta.cargar();
+        formularioDirecto.refrescarAuxiliares();
     }
 
     private void configurarEstilos() {
@@ -47,28 +150,45 @@ public class PnlNutricion extends javax.swing.JPanel {
         utilidades.EstilosComponentes.aplicarCampoSimple(txtBuscarPersonal);
 
         utilidades.EstilosComponentes.aplicarBotonPremium(
-                btnGuardar, new java.awt.Color(8, 124, 255),
-                new java.awt.Color(54, 207, 255), java.awt.Color.WHITE
+                btnGuardar,
+                new java.awt.Color(8, 124, 255),
+                new java.awt.Color(54, 207, 255),
+                java.awt.Color.WHITE
         );
+
         utilidades.EstilosComponentes.aplicarBotonPremium(
-                btnModificar, new java.awt.Color(109, 40, 217),
-                new java.awt.Color(168, 85, 247), java.awt.Color.WHITE
+                btnModificar,
+                new java.awt.Color(109, 40, 217),
+                new java.awt.Color(168, 85, 247),
+                java.awt.Color.WHITE
         );
+
         utilidades.EstilosComponentes.aplicarBotonPremium(
-                btnDesactivar, new java.awt.Color(255, 214, 0),
-                new java.awt.Color(255, 232, 82), new java.awt.Color(41, 31, 0)
+                btnDesactivar,
+                new java.awt.Color(255, 214, 0),
+                new java.awt.Color(255, 232, 82),
+                new java.awt.Color(41, 31, 0)
         );
+
         utilidades.EstilosComponentes.aplicarBotonPremium(
-                btnEliminar, new java.awt.Color(255, 23, 68),
-                new java.awt.Color(255, 91, 110), java.awt.Color.WHITE
+                btnEliminar,
+                new java.awt.Color(255, 23, 68),
+                new java.awt.Color(255, 91, 110),
+                java.awt.Color.WHITE
         );
+
         utilidades.EstilosComponentes.aplicarBotonPremium(
-                btnLimpiar, new java.awt.Color(241, 245, 249),
-                new java.awt.Color(226, 232, 240), new java.awt.Color(52, 74, 100)
+                btnLimpiar,
+                new java.awt.Color(241, 245, 249),
+                new java.awt.Color(226, 232, 240),
+                new java.awt.Color(52, 74, 100)
         );
+
         utilidades.EstilosComponentes.aplicarBotonPremium(
-                btnBuscarPersonal, new java.awt.Color(8, 124, 255),
-                new java.awt.Color(54, 207, 255), java.awt.Color.WHITE
+                btnBuscarPersonal,
+                new java.awt.Color(8, 124, 255),
+                new java.awt.Color(54, 207, 255),
+                java.awt.Color.WHITE
         );
     }
 
@@ -80,13 +200,16 @@ public class PnlNutricion extends javax.swing.JPanel {
         tblPersonal.setSelectionForeground(new java.awt.Color(23, 42, 67));
         tblPersonal.getTableHeader().setPreferredSize(new java.awt.Dimension(0, 42));
         tblPersonal.getTableHeader().setReorderingAllowed(false);
+
         javax.swing.table.DefaultTableCellRenderer encabezado
                 = new javax.swing.table.DefaultTableCellRenderer();
+
         encabezado.setOpaque(true);
         encabezado.setBackground(new java.awt.Color(10, 58, 108));
         encabezado.setForeground(java.awt.Color.WHITE);
         encabezado.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 12));
         encabezado.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+
         tblPersonal.getTableHeader().setDefaultRenderer(encabezado);
     }
 
@@ -95,45 +218,66 @@ public class PnlNutricion extends javax.swing.JPanel {
     }
 
     private void guardarRegistro() {
-        if (gestorConsulta.nuevo()) {
-            limpiarFormulario();
-        }
+        formularioDirecto.guardar();
     }
 
     private void modificarRegistro() {
-        if (gestorConsulta.modificar()) {
-            limpiarFormulario();
-        }
+        formularioDirecto.modificar();
     }
 
     private void desactivarRegistro() {
-        if (gestorConsulta.desactivar()) {
-            limpiarFormulario();
+        if (esNutricionista()
+                && "Planes asignados a clientes".equals(procesoActual())) {
+            formularioDirecto.finalizarPlanSeleccionado();
+            return;
         }
+
+        if (esAdministrador()
+                && "Catalogo de indicadores".equals(procesoActual())) {
+            if (gestorConsulta.desactivar()) {
+                formularioDirecto.limpiar();
+            }
+            return;
+        }
+
+        javax.swing.JOptionPane.showMessageDialog(
+                this,
+                "La opcion seleccionada no admite esta accion.",
+                "GYMNOVA",
+                javax.swing.JOptionPane.WARNING_MESSAGE
+        );
     }
 
     private void eliminarRegistro() {
         if (gestorConsulta.eliminar()) {
-            limpiarFormulario();
+            formularioDirecto.limpiar();
         }
     }
 
     private void limpiarFormulario() {
-        txtCodigoEmpleado.setText("");
-        txtFechaIngreso.setText("");
-        cboTipoContrato.setSelectedIndex(0);
-        txtSalario.setText("");
-        cboPersona.setSelectedIndex(-1);
-        txtCedulaPersona.setText("");
-        txtTurno.setText("");
-        chkEstadoEmpleado.setSelected(true);
-        tblPersonal.clearSelection();
+        formularioDirecto.limpiar();
+    }
+
+    private String procesoActual() {
+        Object item = cboTipoContrato.getSelectedItem();
+        return item == null ? "" : item.toString();
     }
 
     private boolean esAdministrador() {
         return utilidades.SesionUsuario.haySesionActiva()
                 && "Administrador".equalsIgnoreCase(
-                        utilidades.SesionUsuario.getUsuarioActual().getNombreRol()
+                        utilidades.SesionUsuario
+                                .getUsuarioActual()
+                                .getNombreRol()
+                );
+    }
+
+    private boolean esNutricionista() {
+        return utilidades.SesionUsuario.haySesionActiva()
+                && "Nutricionista".equalsIgnoreCase(
+                        utilidades.SesionUsuario
+                                .getUsuarioActual()
+                                .getNombreRol()
                 );
     }
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -238,7 +382,7 @@ public class PnlNutricion extends javax.swing.JPanel {
 
         lblTipoContrato.setText("Proceso nutricional *");
 
-        cboTipoContrato.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Planes asignados a clientes", "Catalogo de alimentos", "Comidas y porciones del plan", "Alergenos de alimentos", "Nutricionistas habilitados", "Certificaciones profesionales" }));
+        cboTipoContrato.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Planes asignados a clientes", "Catalogo de alimentos", "Comidas y porciones del plan", "Nutricionistas habilitados" }));
 
         cboTipoContrato.setPreferredSize(new java.awt.Dimension(300, 32));
 

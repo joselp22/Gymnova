@@ -1,575 +1,535 @@
-/* GYMNOVA - Vista administrativa: NUTRICION. */
 package vista;
 
-import controlador.FormularioModuloDirectoControlador;
-import utilidades.GestorConsultaModulo;
+import controlador.NutricionistaWorkspaceControlador;
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.table.DefaultTableModel;
+import modelo.Alimento;
+import modelo.IncluyeAlimento;
+import modelo.PlanNutricional;
+import modelo.Recomendacion;
+import modelo.ResultadoIndicador;
+import utilidades.ClienteEnAtencion;
 
-public class PnlNutricion extends javax.swing.JPanel {
+/**
+ * Espacio profesional de Nutrición.
+ *
+ * El cliente se selecciona previamente desde "Mis clientes". Esta pantalla
+ * se enfoca en plan nutricional y alimentación; indicadores, recomendaciones
+ * y evolución se muestran como consulta para conservar una visión completa.
+ */
+public class PnlNutricion extends JPanel {
 
-    private final GestorConsultaModulo gestorConsulta;
-    private final FormularioModuloDirectoControlador formularioDirecto;
+    private final NutricionistaWorkspaceControlador controlador
+            = new NutricionistaWorkspaceControlador();
+
+    private final JLabel lblCliente = new JLabel();
+    private final JTabbedPane tabs = new JTabbedPane();
+
+    // Plan
+    private final JTextField txtNombrePlan = NutricionistaUI.campo();
+    private final JTextField txtFechaInicio = NutricionistaUI.campo();
+    private final JTextField txtFechaFin = NutricionistaUI.campo();
+    private final JTextField txtCalorias = NutricionistaUI.campo();
+    private final JTextField txtProteinas = NutricionistaUI.campo();
+    private final JTextField txtCarbohidratos = NutricionistaUI.campo();
+    private final JTextArea txtRestricciones = NutricionistaUI.area(3);
+    private final JLabel lblEstadoPlan = new JLabel("Estado: —");
+    private final JTable tblPlanes = new JTable();
+    private final JButton btnCrearPlan = NutricionistaUI.boton("Crear plan");
+    private final JButton btnModificarPlan = NutricionistaUI.botonSecundario("Modificar plan");
+    private final JButton btnFinalizarPlan = NutricionistaUI.botonSecundario("Finalizar plan");
+    private PlanNutricional planSeleccionado;
+
+    // Alimentación
+    private final JComboBox<String> cboDia = new JComboBox<>(new String[]{
+        "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO"
+    });
+    private final JComboBox<String> cboComida = new JComboBox<>(new String[]{
+        "DESAYUNO", "MEDIA_MANANA", "ALMUERZO", "MERIENDA", "CENA", "OTRO"
+    });
+    private final JComboBox<Alimento> cboAlimento = new JComboBox<>();
+    private final JTextField txtCantidad = NutricionistaUI.campo();
+    private final JTextField txtUnidad = NutricionistaUI.campo();
+    private final JTextField txtHora = NutricionistaUI.campo();
+    private final JTextField txtOrden = NutricionistaUI.campo();
+    private final JTextArea txtIndicaciones = NutricionistaUI.area(3);
+    private final JTable tblComidas = new JTable();
+    private final JButton btnAgregarComida = NutricionistaUI.boton("Agregar alimento");
+    private final JButton btnModificarComida = NutricionistaUI.botonSecundario("Modificar detalle");
+    private List<IncluyeAlimento> comidas = new ArrayList<>();
+    private IncluyeAlimento comidaSeleccionada;
+
+    // Consulta
+    private final JTable tblIndicadores = new JTable();
+    private final JTable tblRecomendaciones = new JTable();
+    private final JTable tblEvolucion = new JTable();
 
     public PnlNutricion() {
-        initComponents();
-        gestorConsulta = new GestorConsultaModulo(
-                this, cboTipoContrato, tblPersonal, txtBuscarPersonal,
-                lblCantidadPersonal, "NUTRICION",
-                GestorConsultaModulo.controladoresPara("NUTRICION")
-        );
-        formularioDirecto = new FormularioModuloDirectoControlador(
-                this, "NUTRICION", gestorConsulta, pnlFormularioPersonal,
-                cboTipoContrato, tblPersonal,
-                lblCodigoEmpleado, txtCodigoEmpleado,
-                lblFechaIngreso, txtFechaIngreso,
-                lblSalario, txtSalario,
-                lblPersona, cboPersona,
-                lblCedulaPersona, txtCedulaPersona,
-                lblTurno, txtTurno, chkEstadoEmpleado
-        );
-        configurarEstilos();
-        configurarTabla();
-        btnBuscarPersonal.addActionListener(evento -> buscarRegistros());
-        cboTipoContrato.addActionListener(evento -> {
-            formularioDirecto.configurarFormulario();
-            refrescarDatos();
-        });
-        txtCodigoEmpleado.setEditable(false);
-        txtCedulaPersona.setEditable(false);
-        btnEliminar.setVisible(esAdministrador());
-        habilitarAcciones();
-        formularioDirecto.configurarFormulario();
+        construir();
+        eventos();
         refrescarDatos();
     }
 
-    private void habilitarAcciones() {
-        btnGuardar.setEnabled(true);
-        btnModificar.setEnabled(true);
-        btnDesactivar.setEnabled(true);
-        btnEliminar.setEnabled(esAdministrador());
+    private void construir() {
+        setLayout(new BorderLayout());
+        setBackground(NutricionistaUI.FONDO);
+        JPanel pagina = NutricionistaUI.pagina();
+        pagina.add(NutricionistaUI.encabezado(
+                "Gestión nutricional",
+                "Planifique la alimentación del cliente seleccionado y consulte su evolución."),
+                BorderLayout.NORTH);
+
+        JPanel centro = new JPanel(new BorderLayout(0, 12));
+        centro.setOpaque(false);
+        JPanel banner = NutricionistaUI.bannerCliente();
+        lblCliente.setFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 14));
+        lblCliente.setForeground(NutricionistaUI.TEXTO);
+        banner.add(lblCliente, BorderLayout.CENTER);
+        centro.add(banner, BorderLayout.NORTH);
+
+        tabs.addTab("Plan nutricional", crearPlan());
+        tabs.addTab("Alimentación", crearAlimentacion());
+        tabs.addTab("Indicadores", crearIndicadoresConsulta());
+        tabs.addTab("Recomendaciones", crearRecomendacionesConsulta());
+        tabs.addTab("Evolución", crearEvolucion());
+        centro.add(tabs, BorderLayout.CENTER);
+        pagina.add(centro, BorderLayout.CENTER);
+        add(pagina, BorderLayout.CENTER);
+    }
+
+    private JPanel crearPlan() {
+        JPanel p = panelPestana();
+
+        JPanel form = NutricionistaUI.tarjeta();
+        form.setLayout(new BorderLayout(0, 12));
+        JPanel titulo = new JPanel(new BorderLayout());
+        titulo.setOpaque(false);
+        titulo.add(NutricionistaUI.tituloSeccion("Plan del cliente"), BorderLayout.WEST);
+        lblEstadoPlan.setForeground(NutricionistaUI.AZUL_OSCURO);
+        titulo.add(lblEstadoPlan, BorderLayout.EAST);
+        form.add(titulo, BorderLayout.NORTH);
+
+        JPanel campos = new JPanel(new GridLayout(2, 3, 10, 8));
+        campos.setOpaque(false);
+        agregarCampo(campos, "Nombre del plan *", txtNombrePlan);
+        agregarCampo(campos, "Fecha inicio *", txtFechaInicio);
+        agregarCampo(campos, "Fecha fin", txtFechaFin);
+        agregarCampo(campos, "Calorías objetivo", txtCalorias);
+        agregarCampo(campos, "Proteínas objetivo (g)", txtProteinas);
+        agregarCampo(campos, "Carbohidratos objetivo (g)", txtCarbohidratos);
+        form.add(campos, BorderLayout.CENTER);
+
+        JPanel sur = new JPanel(new BorderLayout(10, 0));
+        sur.setOpaque(false);
+        JPanel restr = new JPanel(new BorderLayout(0, 4));
+        restr.setOpaque(false);
+        restr.add(NutricionistaUI.etiqueta("Restricciones generales"), BorderLayout.NORTH);
+        restr.add(new JScrollPane(txtRestricciones), BorderLayout.CENTER);
+        sur.add(restr, BorderLayout.CENTER);
+        JPanel botones = new JPanel();
+        botones.setOpaque(false);
+        botones.setLayout(new javax.swing.BoxLayout(botones, javax.swing.BoxLayout.Y_AXIS));
+        botones.add(btnCrearPlan);
+        botones.add(javax.swing.Box.createVerticalStrut(6));
+        botones.add(btnModificarPlan);
+        botones.add(javax.swing.Box.createVerticalStrut(6));
+        botones.add(btnFinalizarPlan);
+        sur.add(botones, BorderLayout.EAST);
+        form.add(sur, BorderLayout.SOUTH);
+        p.add(form, BorderLayout.NORTH);
+
+        NutricionistaUI.tabla(tblPlanes);
+        p.add(NutricionistaUI.scrollTabla(tblPlanes), BorderLayout.CENTER);
+        return p;
+    }
+
+    private JPanel crearAlimentacion() {
+        JPanel p = panelPestana();
+        JPanel form = NutricionistaUI.tarjeta();
+        form.setLayout(new BorderLayout(0, 10));
+        form.add(NutricionistaUI.tituloSeccion("Alimentación del plan activo"), BorderLayout.NORTH);
+        JPanel campos = new JPanel(new GridLayout(2, 4, 10, 8));
+        campos.setOpaque(false);
+        agregarCampo(campos, "Día *", cboDia);
+        agregarCampo(campos, "Tipo de comida *", cboComida);
+        agregarCampo(campos, "Alimento *", cboAlimento);
+        agregarCampo(campos, "Cantidad *", txtCantidad);
+        agregarCampo(campos, "Unidad *", txtUnidad);
+        agregarCampo(campos, "Hora (HH:MM)", txtHora);
+        agregarCampo(campos, "Orden *", txtOrden);
+        JPanel obs = new JPanel(new BorderLayout(0, 4));
+        obs.setOpaque(false);
+        obs.add(NutricionistaUI.etiqueta("Indicaciones"), BorderLayout.NORTH);
+        obs.add(new JScrollPane(txtIndicaciones), BorderLayout.CENTER);
+        campos.add(obs);
+        form.add(campos, BorderLayout.CENTER);
+        form.add(NutricionistaUI.filaBotones(btnAgregarComida, btnModificarComida), BorderLayout.SOUTH);
+        p.add(form, BorderLayout.NORTH);
+
+        NutricionistaUI.tabla(tblComidas);
+        p.add(NutricionistaUI.scrollTabla(tblComidas), BorderLayout.CENTER);
+        return p;
+    }
+
+    private JPanel crearIndicadoresConsulta() {
+        JPanel p = panelPestana();
+        JPanel aviso = NutricionistaUI.tarjeta();
+        aviso.setLayout(new BorderLayout());
+        aviso.add(NutricionistaUI.tituloSeccion("Indicadores del cliente"), BorderLayout.WEST);
+        JLabel l = new JLabel("Los resultados se registran desde Seguimiento.");
+        l.setForeground(NutricionistaUI.TEXTO_SECUNDARIO);
+        aviso.add(l, BorderLayout.EAST);
+        p.add(aviso, BorderLayout.NORTH);
+        NutricionistaUI.tabla(tblIndicadores);
+        p.add(NutricionistaUI.scrollTabla(tblIndicadores), BorderLayout.CENTER);
+        return p;
+    }
+
+    private JPanel crearRecomendacionesConsulta() {
+        JPanel p = panelPestana();
+        JPanel aviso = NutricionistaUI.tarjeta();
+        aviso.setLayout(new BorderLayout());
+        aviso.add(NutricionistaUI.tituloSeccion("Recomendaciones"), BorderLayout.WEST);
+        JLabel l = new JLabel("Cree nuevas recomendaciones desde Seguimiento.");
+        l.setForeground(NutricionistaUI.TEXTO_SECUNDARIO);
+        aviso.add(l, BorderLayout.EAST);
+        p.add(aviso, BorderLayout.NORTH);
+        NutricionistaUI.tabla(tblRecomendaciones);
+        p.add(NutricionistaUI.scrollTabla(tblRecomendaciones), BorderLayout.CENTER);
+        return p;
+    }
+
+    private JPanel crearEvolucion() {
+        JPanel p = panelPestana();
+        JPanel aviso = NutricionistaUI.tarjeta();
+        aviso.setLayout(new BorderLayout());
+        aviso.add(NutricionistaUI.tituloSeccion("Evolución de indicadores"), BorderLayout.WEST);
+        p.add(aviso, BorderLayout.NORTH);
+        NutricionistaUI.tabla(tblEvolucion);
+        p.add(NutricionistaUI.scrollTabla(tblEvolucion), BorderLayout.CENTER);
+        return p;
+    }
+
+    private JPanel panelPestana() {
+        JPanel p = new JPanel(new BorderLayout(0, 12));
+        p.setBackground(NutricionistaUI.FONDO);
+        p.setBorder(javax.swing.BorderFactory.createEmptyBorder(12, 0, 0, 0));
+        return p;
+    }
+
+    private void eventos() {
+        btnCrearPlan.addActionListener(e -> crearPlanNuevo());
+        btnModificarPlan.addActionListener(e -> modificarPlan());
+        btnFinalizarPlan.addActionListener(e -> finalizarPlan());
+        tblPlanes.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) seleccionarPlan();
+        });
+        btnAgregarComida.addActionListener(e -> agregarComida());
+        btnModificarComida.addActionListener(e -> modificarComida());
+        tblComidas.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) seleccionarComida();
+        });
+        tabs.addChangeListener(e -> refrescarDatos());
     }
 
     public void refrescarDatos() {
-        gestorConsulta.cargar();
-        formularioDirecto.refrescarAuxiliares();
+        boolean hay = ClienteEnAtencion.hay();
+        lblCliente.setText(hay
+                ? "Cliente en atención: " + ClienteEnAtencion.descripcion()
+                : "Ningún cliente seleccionado. Seleccione uno desde Mis clientes.");
+        habilitarTrabajo(hay);
+        cargarPlanes();
+        cargarAlimentos();
+        cargarComidas();
+        cargarConsultas();
     }
 
-    private void configurarEstilos() {
-        utilidades.EstilosComponentes.aplicarComboRedondeado(cboPersona);
-        utilidades.EstilosComponentes.aplicarComboRedondeado(cboTipoContrato);
-        utilidades.EstilosComponentes.aplicarCampoSimple(txtCodigoEmpleado);
-        utilidades.EstilosComponentes.aplicarCampoSimple(txtFechaIngreso);
-        utilidades.EstilosComponentes.aplicarCampoSimple(txtSalario);
-        utilidades.EstilosComponentes.aplicarCampoSimple(txtCedulaPersona);
-        utilidades.EstilosComponentes.aplicarCampoSimple(txtTurno);
-        utilidades.EstilosComponentes.aplicarCampoSimple(txtBuscarPersonal);
-
-        utilidades.EstilosComponentes.aplicarBotonPremium(
-                btnGuardar, new java.awt.Color(8, 124, 255),
-                new java.awt.Color(54, 207, 255), java.awt.Color.WHITE
-        );
-        utilidades.EstilosComponentes.aplicarBotonPremium(
-                btnModificar, new java.awt.Color(109, 40, 217),
-                new java.awt.Color(168, 85, 247), java.awt.Color.WHITE
-        );
-        utilidades.EstilosComponentes.aplicarBotonPremium(
-                btnDesactivar, new java.awt.Color(255, 214, 0),
-                new java.awt.Color(255, 232, 82), new java.awt.Color(41, 31, 0)
-        );
-        utilidades.EstilosComponentes.aplicarBotonPremium(
-                btnEliminar, new java.awt.Color(255, 23, 68),
-                new java.awt.Color(255, 91, 110), java.awt.Color.WHITE
-        );
-        utilidades.EstilosComponentes.aplicarBotonPremium(
-                btnLimpiar, new java.awt.Color(241, 245, 249),
-                new java.awt.Color(226, 232, 240), new java.awt.Color(52, 74, 100)
-        );
-        utilidades.EstilosComponentes.aplicarBotonPremium(
-                btnBuscarPersonal, new java.awt.Color(8, 124, 255),
-                new java.awt.Color(54, 207, 255), java.awt.Color.WHITE
-        );
+    private void habilitarTrabajo(boolean hay) {
+        btnCrearPlan.setEnabled(hay);
+        btnModificarPlan.setEnabled(false);
+        btnFinalizarPlan.setEnabled(false);
+        btnAgregarComida.setEnabled(hay && controlador.planActivoClienteActual() != null);
+        btnModificarComida.setEnabled(false);
     }
 
-    private void configurarTabla() {
-        tblPersonal.setRowHeight(40);
-        tblPersonal.setShowGrid(false);
-        tblPersonal.setFillsViewportHeight(true);
-        tblPersonal.setSelectionBackground(new java.awt.Color(220, 238, 255));
-        tblPersonal.setSelectionForeground(new java.awt.Color(23, 42, 67));
-        tblPersonal.getTableHeader().setPreferredSize(new java.awt.Dimension(0, 42));
-        tblPersonal.getTableHeader().setReorderingAllowed(false);
-        javax.swing.table.DefaultTableCellRenderer encabezado
-                = new javax.swing.table.DefaultTableCellRenderer();
-        encabezado.setOpaque(true);
-        encabezado.setBackground(new java.awt.Color(10, 58, 108));
-        encabezado.setForeground(java.awt.Color.WHITE);
-        encabezado.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 12));
-        encabezado.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        tblPersonal.getTableHeader().setDefaultRenderer(encabezado);
+    private void cargarPlanes() {
+        List<PlanNutricional> lista = controlador.listarPlanesClienteActual();
+        DefaultTableModel m = modelo(new String[]{
+            "Código", "Plan", "Inicio", "Fin", "Calorías", "Proteínas", "Carbohidratos", "Estado"
+        });
+        for (PlanNutricional x : lista) m.addRow(new Object[]{
+            x.getCodigoPlan(), x.getNombrePlan(), x.getFechaInicio(), x.getFechaFin(),
+            x.getCaloriasObjetivo(), x.getProteinasObjetivoG(), x.getCarbohidratosObjetivoG(), x.getEstadoPlan()
+        });
+        tblPlanes.setModel(m);
+        planSeleccionado = null;
+        PlanNutricional activo = controlador.planActivoClienteActual();
+        lblEstadoPlan.setText(activo == null ? "Estado: sin plan activo"
+                : "Estado: ACTIVO · " + activo.getNombrePlan());
+        btnCrearPlan.setEnabled(ClienteEnAtencion.hay() && activo == null);
+        btnModificarPlan.setEnabled(false);
+        btnFinalizarPlan.setEnabled(false);
     }
 
-    private void buscarRegistros() {
-        gestorConsulta.cargar();
+    private void seleccionarPlan() {
+        int f = tblPlanes.getSelectedRow();
+        if (f < 0) return;
+        int m = tblPlanes.convertRowIndexToModel(f);
+        List<PlanNutricional> lista = controlador.listarPlanesClienteActual();
+        if (m >= lista.size()) return;
+        planSeleccionado = lista.get(m);
+        txtNombrePlan.setText(valor(planSeleccionado.getNombrePlan()));
+        txtFechaInicio.setText(valor(planSeleccionado.getFechaInicio()));
+        txtFechaFin.setText(valor(planSeleccionado.getFechaFin()));
+        txtCalorias.setText(valor(planSeleccionado.getCaloriasObjetivo()));
+        txtProteinas.setText(valor(planSeleccionado.getProteinasObjetivoG()));
+        txtCarbohidratos.setText(valor(planSeleccionado.getCarbohidratosObjetivoG()));
+        txtRestricciones.setText(valor(planSeleccionado.getRestriccionesGenerales()));
+        boolean activo = "ACTIVO".equalsIgnoreCase(planSeleccionado.getEstadoPlan());
+        btnModificarPlan.setEnabled(activo);
+        btnFinalizarPlan.setEnabled(activo);
     }
 
-    private void guardarRegistro() {
-        formularioDirecto.guardar();
+    private void crearPlanNuevo() {
+        try {
+            Long id = controlador.crearPlan(
+                    requerido(txtNombrePlan.getText(), "Ingrese el nombre del plan."),
+                    fechaRequerida(txtFechaInicio.getText(), "Fecha de inicio"),
+                    fechaOpcional(txtFechaFin.getText()),
+                    enteroOpcional(txtCalorias.getText(), "Calorías"),
+                    decimalOpcional(txtProteinas.getText(), "Proteínas"),
+                    decimalOpcional(txtCarbohidratos.getText(), "Carbohidratos"),
+                    texto(txtRestricciones.getText()));
+            informar(id != null);
+            if (id != null) { limpiarPlan(); refrescarDatos(); }
+        } catch (IllegalArgumentException ex) { advertencia(ex.getMessage()); }
     }
 
-    private void modificarRegistro() {
-        formularioDirecto.modificar();
+    private void modificarPlan() {
+        if (planSeleccionado == null) return;
+        try {
+            planSeleccionado.setNombrePlan(requerido(txtNombrePlan.getText(), "Ingrese el nombre del plan."));
+            planSeleccionado.setFechaInicio(fechaRequerida(txtFechaInicio.getText(), "Fecha de inicio"));
+            planSeleccionado.setFechaFin(fechaOpcional(txtFechaFin.getText()));
+            planSeleccionado.setCaloriasObjetivo(enteroOpcional(txtCalorias.getText(), "Calorías"));
+            planSeleccionado.setProteinasObjetivoG(decimalOpcional(txtProteinas.getText(), "Proteínas"));
+            planSeleccionado.setCarbohidratosObjetivoG(decimalOpcional(txtCarbohidratos.getText(), "Carbohidratos"));
+            planSeleccionado.setRestriccionesGenerales(texto(txtRestricciones.getText()));
+            boolean ok = controlador.modificarPlan(planSeleccionado);
+            informar(ok);
+            if (ok) { limpiarPlan(); refrescarDatos(); }
+        } catch (IllegalArgumentException ex) { advertencia(ex.getMessage()); }
     }
 
-    private void desactivarRegistro() {
-        if (gestorConsulta.desactivar()) {
-            formularioDirecto.limpiar();
-            refrescarDatos();
+    private void finalizarPlan() {
+        if (planSeleccionado == null) return;
+        int op = javax.swing.JOptionPane.showConfirmDialog(this,
+                "¿Finalizar el plan activo seleccionado?", "Finalizar plan",
+                javax.swing.JOptionPane.YES_NO_OPTION);
+        if (op != javax.swing.JOptionPane.YES_OPTION) return;
+        boolean ok = controlador.finalizarPlan(planSeleccionado.getIdPlanNutricional());
+        informar(ok);
+        if (ok) { limpiarPlan(); refrescarDatos(); }
+    }
+
+    private void cargarAlimentos() {
+        Alimento actual = (Alimento) cboAlimento.getSelectedItem();
+        DefaultComboBoxModel<Alimento> m = new DefaultComboBoxModel<>();
+        for (Alimento a : controlador.listarAlimentos("")) m.addElement(a);
+        cboAlimento.setModel(m);
+        if (actual != null) {
+            for (int i = 0; i < m.getSize(); i++) {
+                if (m.getElementAt(i).getIdAlimento().equals(actual.getIdAlimento())) {
+                    cboAlimento.setSelectedIndex(i); break;
+                }
+            }
         }
     }
 
-    private void eliminarRegistro() {
-        if (gestorConsulta.eliminar()) {
-            formularioDirecto.limpiar();
-            refrescarDatos();
+    private void cargarComidas() {
+        comidas = controlador.listarComidasPlanActivo();
+        DefaultTableModel m = modelo(new String[]{
+            "Día", "Comida", "Hora", "Alimento", "Cantidad", "Unidad", "Orden", "Indicaciones"
+        });
+        for (IncluyeAlimento x : comidas) m.addRow(new Object[]{
+            x.getDiaSemana(), x.getTipoComida(), x.getHoraConsumo(),
+            controlador.nombreAlimento(x.getIdAlimento()), x.getCantidad(),
+            x.getUnidadMedida(), x.getOrdenComida(), x.getIndicaciones()
+        });
+        tblComidas.setModel(m);
+        comidaSeleccionada = null;
+        btnModificarComida.setEnabled(false);
+        btnAgregarComida.setEnabled(ClienteEnAtencion.hay() && controlador.planActivoClienteActual() != null);
+    }
+
+    private void seleccionarComida() {
+        int f = tblComidas.getSelectedRow();
+        if (f < 0) return;
+        int m = tblComidas.convertRowIndexToModel(f);
+        if (m >= comidas.size()) return;
+        comidaSeleccionada = comidas.get(m);
+        cboDia.setSelectedItem(comidaSeleccionada.getDiaSemana());
+        cboComida.setSelectedItem(comidaSeleccionada.getTipoComida());
+        seleccionarAlimento(comidaSeleccionada.getIdAlimento());
+        txtCantidad.setText(valor(comidaSeleccionada.getCantidad()));
+        txtUnidad.setText(valor(comidaSeleccionada.getUnidadMedida()));
+        txtHora.setText(valor(comidaSeleccionada.getHoraConsumo()));
+        txtOrden.setText(valor(comidaSeleccionada.getOrdenComida()));
+        txtIndicaciones.setText(valor(comidaSeleccionada.getIndicaciones()));
+        btnModificarComida.setEnabled(true);
+    }
+
+    private void agregarComida() {
+        try {
+            Alimento a = (Alimento) cboAlimento.getSelectedItem();
+            if (a == null) throw new IllegalArgumentException("Seleccione un alimento.");
+            Long id = controlador.agregarComida(
+                    String.valueOf(cboDia.getSelectedItem()),
+                    String.valueOf(cboComida.getSelectedItem()),
+                    horaOpcional(txtHora.getText()),
+                    decimalRequerido(txtCantidad.getText(), "Cantidad"),
+                    requerido(txtUnidad.getText(), "Ingrese la unidad de medida."),
+                    enteroRequerido(txtOrden.getText(), "Orden"),
+                    a.getIdAlimento(), texto(txtIndicaciones.getText()));
+            informar(id != null);
+            if (id != null) { limpiarComida(); cargarComidas(); }
+        } catch (IllegalArgumentException ex) { advertencia(ex.getMessage()); }
+    }
+
+    private void modificarComida() {
+        if (comidaSeleccionada == null) return;
+        try {
+            Alimento a = (Alimento) cboAlimento.getSelectedItem();
+            if (a == null) throw new IllegalArgumentException("Seleccione un alimento.");
+            comidaSeleccionada.setDiaSemana(String.valueOf(cboDia.getSelectedItem()));
+            comidaSeleccionada.setTipoComida(String.valueOf(cboComida.getSelectedItem()));
+            comidaSeleccionada.setIdAlimento(a.getIdAlimento());
+            comidaSeleccionada.setCantidad(decimalRequerido(txtCantidad.getText(), "Cantidad"));
+            comidaSeleccionada.setUnidadMedida(requerido(txtUnidad.getText(), "Ingrese la unidad de medida."));
+            comidaSeleccionada.setHoraConsumo(horaOpcional(txtHora.getText()));
+            comidaSeleccionada.setOrdenComida(enteroRequerido(txtOrden.getText(), "Orden"));
+            comidaSeleccionada.setIndicaciones(texto(txtIndicaciones.getText()));
+            boolean ok = controlador.modificarComida(comidaSeleccionada);
+            informar(ok);
+            if (ok) { limpiarComida(); cargarComidas(); }
+        } catch (IllegalArgumentException ex) { advertencia(ex.getMessage()); }
+    }
+
+    private void cargarConsultas() {
+        DefaultTableModel i = modelo(new String[]{"Fecha", "Indicador", "Valor", "Clasificación", "Fuera de rango"});
+        List<ResultadoIndicador> resultados = controlador.listarResultadosClienteActual();
+        for (ResultadoIndicador r : resultados) i.addRow(new Object[]{
+            r.getFechaRegistro(), controlador.nombreIndicador(r.getIdIndicador()),
+            r.getValorObtenido(), r.getClasificacion(), r.isFueraDeRango() ? "SÍ" : "NO"
+        });
+        tblIndicadores.setModel(i);
+        tblEvolucion.setModel(i);
+
+        DefaultTableModel rec = modelo(new String[]{"Fecha", "Tipo", "Título", "Prioridad", "Estado"});
+        for (Recomendacion r : controlador.listarRecomendacionesClienteActual()) rec.addRow(new Object[]{
+            r.getFechaRecomendacion(), r.getTipoRecomendacion(), r.getTitulo(), r.getPrioridad(), r.getEstadoRecomendacion()
+        });
+        tblRecomendaciones.setModel(rec);
+    }
+
+    private void agregarCampo(JPanel panel, String etiqueta, java.awt.Component campo) {
+        JPanel p = new JPanel(new BorderLayout(0, 4));
+        p.setOpaque(false);
+        p.add(NutricionistaUI.etiqueta(etiqueta), BorderLayout.NORTH);
+        p.add(campo, BorderLayout.CENTER);
+        panel.add(p);
+    }
+
+    private void limpiarPlan() {
+        planSeleccionado = null;
+        txtNombrePlan.setText(""); txtFechaInicio.setText(""); txtFechaFin.setText("");
+        txtCalorias.setText(""); txtProteinas.setText(""); txtCarbohidratos.setText("");
+        txtRestricciones.setText(""); tblPlanes.clearSelection();
+    }
+
+    private void limpiarComida() {
+        comidaSeleccionada = null;
+        txtCantidad.setText(""); txtUnidad.setText(""); txtHora.setText("");
+        txtOrden.setText(""); txtIndicaciones.setText(""); tblComidas.clearSelection();
+    }
+
+    private void seleccionarAlimento(Long id) {
+        for (int i = 0; i < cboAlimento.getItemCount(); i++) {
+            Alimento a = cboAlimento.getItemAt(i);
+            if (a != null && a.getIdAlimento().equals(id)) { cboAlimento.setSelectedIndex(i); return; }
         }
     }
 
-    private void limpiarFormulario() {
-        formularioDirecto.limpiar();
+    private String requerido(String s, String msg) {
+        if (s == null || s.isBlank()) throw new IllegalArgumentException(msg);
+        return s.trim();
     }
-
-    private boolean esAdministrador() {
-        return utilidades.SesionUsuario.haySesionActiva()
-                && "Administrador".equalsIgnoreCase(
-                        utilidades.SesionUsuario.getUsuarioActual().getNombreRol()
-                );
+    private String texto(String s) { return s == null || s.isBlank() ? null : s.trim(); }
+    private LocalDate fechaRequerida(String s, String nombre) {
+        if (s == null || s.isBlank()) throw new IllegalArgumentException(nombre + " es obligatoria.");
+        return fechaOpcional(s);
     }
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
+    private LocalDate fechaOpcional(String s) {
+        if (s == null || s.isBlank()) return null;
+        try { return LocalDate.parse(s.trim()); }
+        catch (java.time.format.DateTimeParseException ex) { throw new IllegalArgumentException("La fecha debe tener formato AAAA-MM-DD."); }
+    }
+    private LocalTime horaOpcional(String s) {
+        if (s == null || s.isBlank()) return null;
+        try { return LocalTime.parse(s.trim()); }
+        catch (java.time.format.DateTimeParseException ex) { throw new IllegalArgumentException("La hora debe tener formato HH:MM."); }
+    }
+    private Integer enteroOpcional(String s, String nombre) {
+        if (s == null || s.isBlank()) return null;
+        return enteroRequerido(s, nombre);
+    }
+    private Integer enteroRequerido(String s, String nombre) {
+        try {
+            int v = Integer.parseInt(requerido(s, nombre + " es obligatorio."));
+            if (v <= 0) throw new IllegalArgumentException(nombre + " debe ser mayor que cero.");
+            return v;
+        } catch (NumberFormatException ex) { throw new IllegalArgumentException(nombre + " debe ser un número entero."); }
+    }
+    private BigDecimal decimalOpcional(String s, String nombre) {
+        if (s == null || s.isBlank()) return null;
+        return decimalRequerido(s, nombre);
+    }
+    private BigDecimal decimalRequerido(String s, String nombre) {
+        try {
+            BigDecimal v = new BigDecimal(requerido(s, nombre + " es obligatorio.").replace(',', '.'));
+            if (v.signum() < 0) throw new IllegalArgumentException(nombre + " no puede ser negativo.");
+            return v;
+        } catch (NumberFormatException ex) { throw new IllegalArgumentException(nombre + " debe ser numérico."); }
+    }
+    private String valor(Object o) { return o == null ? "" : o.toString(); }
 
-        pnlBaseNutricion = new javax.swing.JPanel();
-        pnlEncabezadoPersonal = new javax.swing.JPanel();
-        lblTituloPersonal = new javax.swing.JLabel();
-        lblModuloPersonal = new javax.swing.JLabel();
-        pnlFormularioPersonal = new javax.swing.JPanel();
-        lblTituloFormulario = new javax.swing.JLabel();
-        lblCamposObligatorios = new javax.swing.JLabel();
-        lblCodigoEmpleado = new javax.swing.JLabel();
-        txtCodigoEmpleado = new javax.swing.JTextField();
-        lblFechaIngreso = new javax.swing.JLabel();
-        txtFechaIngreso = new javax.swing.JTextField();
-        lblTipoContrato = new javax.swing.JLabel();
-        cboTipoContrato = new javax.swing.JComboBox<>();
-        lblSalario = new javax.swing.JLabel();
-        txtSalario = new javax.swing.JTextField();
-        cboPersona = new javax.swing.JComboBox<>();
-        lblPersona = new javax.swing.JLabel();
-        lblCedulaPersona = new javax.swing.JLabel();
-        txtCedulaPersona = new javax.swing.JTextField();
-        lblTurno = new javax.swing.JLabel();
-        txtTurno = new javax.swing.JTextField();
-        chkEstadoEmpleado = new javax.swing.JCheckBox();
-        btnGuardar = new javax.swing.JButton();
-        btnModificar = new javax.swing.JButton();
-        btnLimpiar = new javax.swing.JButton();
-        btnDesactivar = new javax.swing.JButton();
-        btnEliminar = new javax.swing.JButton();
-        pnlTablaPersonal = new javax.swing.JPanel();
-        txtBuscarPersonal = new javax.swing.JTextField();
-        btnBuscarPersonal = new javax.swing.JButton();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        tblPersonal = new javax.swing.JTable();
-        lblBuscarPersonal = new javax.swing.JLabel();
-        lblCantidadPersonal = new javax.swing.JLabel();
-
-        setMinimumSize(new java.awt.Dimension(1050, 650));
-        setPreferredSize(new java.awt.Dimension(1150, 720));
-
-        pnlBaseNutricion.setBackground(new java.awt.Color(234, 242, 251));
-
-        pnlEncabezadoPersonal.setBackground(new java.awt.Color(255, 255, 255));
-        pnlEncabezadoPersonal.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(212, 225, 239)));
-        pnlEncabezadoPersonal.setPreferredSize(new java.awt.Dimension(1000, 70));
-
-        lblTituloPersonal.setFont(new java.awt.Font("SansSerif", 1, 25)); // NOI18N
-        lblTituloPersonal.setForeground(new java.awt.Color(23, 42, 67));
-        lblTituloPersonal.setText("Planes y control nutricional");
-        lblTituloPersonal.setPreferredSize(new java.awt.Dimension(350, 35));
-
-        lblModuloPersonal.setForeground(new java.awt.Color(8, 124, 255));
-        lblModuloPersonal.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblModuloPersonal.setText("NUTRICION");
-        lblModuloPersonal.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(8, 124, 255), 1, true));
-        lblModuloPersonal.setPreferredSize(new java.awt.Dimension(58, 58));
-
-        javax.swing.GroupLayout pnlEncabezadoPersonalLayout = new javax.swing.GroupLayout(pnlEncabezadoPersonal);
-        pnlEncabezadoPersonal.setLayout(pnlEncabezadoPersonalLayout);
-        pnlEncabezadoPersonalLayout.setHorizontalGroup(
-            pnlEncabezadoPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlEncabezadoPersonalLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(lblTituloPersonal, javax.swing.GroupLayout.PREFERRED_SIZE, 421, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(lblModuloPersonal, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
-        );
-        pnlEncabezadoPersonalLayout.setVerticalGroup(
-            pnlEncabezadoPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlEncabezadoPersonalLayout.createSequentialGroup()
-                .addGap(9, 9, 9)
-                .addGroup(pnlEncabezadoPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblTituloPersonal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblModuloPersonal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-
-        pnlFormularioPersonal.setBackground(new java.awt.Color(255, 255, 255));
-        pnlFormularioPersonal.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(212, 225, 239)));
-        pnlFormularioPersonal.setPreferredSize(new java.awt.Dimension(1000, 285));
-
-        lblTituloFormulario.setFont(new java.awt.Font("SansSerif", 1, 18)); // NOI18N
-        lblTituloFormulario.setForeground(new java.awt.Color(23, 42, 67));
-        lblTituloFormulario.setText("Planificación nutricional");
-        lblTituloFormulario.setPreferredSize(new java.awt.Dimension(300, 30));
-
-        lblCamposObligatorios.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
-        lblCamposObligatorios.setForeground(new java.awt.Color(107, 127, 153));
-        lblCamposObligatorios.setText("Los campos con * son obligatorios");
-
-        lblCodigoEmpleado.setText("Codigo del plan *");
-
-        txtCodigoEmpleado.setPreferredSize(new java.awt.Dimension(300, 32));
-
-        lblFechaIngreso.setText("Fecha de inicio *");
-
-        txtFechaIngreso.setPreferredSize(new java.awt.Dimension(300, 32));
-
-        lblTipoContrato.setText("Proceso nutricional *");
-
-        cboTipoContrato.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Planes asignados a clientes", "Catalogo de alimentos", "Comidas y porciones del plan", "Nutricionistas habilitados" }));
-
-        cboTipoContrato.setPreferredSize(new java.awt.Dimension(300, 32));
-
-        lblSalario.setText("Calorias / cantidad *");
-
-        txtSalario.setToolTipText("Ingrese las calorias o cantidad correspondiente a la opcion seleccionada.");
-        txtSalario.setPreferredSize(new java.awt.Dimension(300, 32));
-
-        cboPersona.setPreferredSize(new java.awt.Dimension(300, 32));
-
-        lblPersona.setText("Cliente *");
-
-        lblCedulaPersona.setText("Nutricionista *");
-
-        txtCedulaPersona.setEditable(false);
-        txtCedulaPersona.setPreferredSize(new java.awt.Dimension(300, 32));
-
-        lblTurno.setText("Fecha fin / detalle");
-
-        txtTurno.setPreferredSize(new java.awt.Dimension(300, 32));
-
-        chkEstadoEmpleado.setBackground(new java.awt.Color(255, 255, 255));
-        chkEstadoEmpleado.setForeground(new java.awt.Color(23, 42, 67));
-        chkEstadoEmpleado.setSelected(true);
-        chkEstadoEmpleado.setText("Plan activo");
-
-        btnGuardar.setBackground(new java.awt.Color(8, 124, 255));
-        btnGuardar.setFont(new java.awt.Font("SansSerif", 1, 12)); // NOI18N
-        btnGuardar.setForeground(new java.awt.Color(255, 255, 255));
-        btnGuardar.setText("Guardar registro");
-        btnGuardar.setPreferredSize(new java.awt.Dimension(375, 38));
-        btnGuardar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnGuardarActionPerformed(evt);
-            }
-        });
-
-        btnModificar.setBackground(new java.awt.Color(157, 78, 221));
-        btnModificar.setFont(new java.awt.Font("SansSerif", 1, 12)); // NOI18N
-        btnModificar.setForeground(new java.awt.Color(255, 255, 255));
-        btnModificar.setText("Modificar");
-        btnModificar.setEnabled(false);
-        btnModificar.setPreferredSize(new java.awt.Dimension(180, 36));
-        btnModificar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnModificarActionPerformed(evt);
-            }
-        });
-
-        btnLimpiar.setBackground(new java.awt.Color(226, 232, 240));
-        btnLimpiar.setFont(new java.awt.Font("SansSerif", 1, 12)); // NOI18N
-        btnLimpiar.setForeground(new java.awt.Color(52, 74, 100));
-        btnLimpiar.setText("Limpiar formulario");
-        btnLimpiar.setPreferredSize(new java.awt.Dimension(375, 36));
-        btnLimpiar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnLimpiarActionPerformed(evt);
-            }
-        });
-
-        btnDesactivar.setBackground(new java.awt.Color(255, 214, 0));
-        btnDesactivar.setFont(new java.awt.Font("SansSerif", 1, 12)); // NOI18N
-        btnDesactivar.setForeground(new java.awt.Color(41, 31, 0));
-        btnDesactivar.setText("Desactivar");
-        btnDesactivar.setEnabled(false);
-        btnDesactivar.setPreferredSize(new java.awt.Dimension(180, 36));
-        btnDesactivar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnDesactivarActionPerformed(evt);
-            }
-        });
-
-        btnEliminar.setBackground(new java.awt.Color(255, 23, 68));
-        btnEliminar.setFont(new java.awt.Font("SansSerif", 1, 12)); // NOI18N
-        btnEliminar.setForeground(new java.awt.Color(255, 255, 255));
-        btnEliminar.setText("Eliminar definitivamente");
-        btnEliminar.setEnabled(false);
-        btnEliminar.setPreferredSize(new java.awt.Dimension(375, 36));
-        btnEliminar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnEliminarActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout pnlFormularioPersonalLayout = new javax.swing.GroupLayout(pnlFormularioPersonal);
-        pnlFormularioPersonal.setLayout(pnlFormularioPersonalLayout);
-        pnlFormularioPersonalLayout.setHorizontalGroup(
-            pnlFormularioPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlFormularioPersonalLayout.createSequentialGroup()
-                .addGap(20, 20, 20)
-                .addGroup(pnlFormularioPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lblTituloFormulario, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblCamposObligatorios)
-                    .addGroup(pnlFormularioPersonalLayout.createSequentialGroup()
-                        .addGroup(pnlFormularioPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lblCodigoEmpleado)
-                            .addComponent(txtCodigoEmpleado, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblPersona)
-                            .addComponent(cboPersona, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(16, 16, 16)
-                        .addGroup(pnlFormularioPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lblFechaIngreso)
-                            .addComponent(txtFechaIngreso, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblCedulaPersona)
-                            .addComponent(txtCedulaPersona, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(16, 16, 16)
-                        .addGroup(pnlFormularioPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lblTipoContrato)
-                            .addComponent(cboTipoContrato, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblTurno)
-                            .addComponent(txtTurno, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(16, 16, 16)
-                        .addGroup(pnlFormularioPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lblSalario)
-                            .addComponent(txtSalario, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(chkEstadoEmpleado, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(pnlFormularioPersonalLayout.createSequentialGroup()
-                        .addComponent(btnGuardar, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(12, 12, 12)
-                        .addComponent(btnModificar, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(12, 12, 12)
-                        .addComponent(btnDesactivar, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(12, 12, 12)
-                        .addComponent(btnLimpiar, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(12, 12, 12)
-                        .addComponent(btnEliminar, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(20, Short.MAX_VALUE))
-        );
-        pnlFormularioPersonalLayout.setVerticalGroup(
-            pnlFormularioPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlFormularioPersonalLayout.createSequentialGroup()
-                .addGap(12, 12, 12)
-                .addComponent(lblTituloFormulario, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(2, 2, 2)
-                .addComponent(lblCamposObligatorios)
-                .addGap(13, 13, 13)
-                .addGroup(pnlFormularioPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblCodigoEmpleado)
-                    .addComponent(lblFechaIngreso)
-                    .addComponent(lblTipoContrato)
-                    .addComponent(lblSalario))
-                .addGap(5, 5, 5)
-                .addGroup(pnlFormularioPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txtCodigoEmpleado, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtFechaIngreso, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(cboTipoContrato, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtSalario, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(12, 12, 12)
-                .addGroup(pnlFormularioPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblPersona)
-                    .addComponent(lblCedulaPersona)
-                    .addComponent(lblTurno))
-                .addGap(5, 5, 5)
-                .addGroup(pnlFormularioPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cboPersona, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtCedulaPersona, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtTurno, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(chkEstadoEmpleado, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(17, 17, 17)
-                .addGroup(pnlFormularioPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnGuardar, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnModificar, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnDesactivar, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnLimpiar, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnEliminar, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(16, Short.MAX_VALUE))
-        );
-
-        pnlTablaPersonal.setBackground(new java.awt.Color(255, 255, 255));
-        pnlTablaPersonal.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(212, 225, 239)));
-        pnlTablaPersonal.setPreferredSize(new java.awt.Dimension(1000, 400));
-
-        txtBuscarPersonal.setToolTipText("Buscar por código, cédula, nombre, apellido o correo");
-        txtBuscarPersonal.setPreferredSize(new java.awt.Dimension(400, 38));
-        txtBuscarPersonal.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                txtBuscarPersonalActionPerformed(evt);
-            }
-        });
-
-        btnBuscarPersonal.setBackground(new java.awt.Color(8, 124, 255));
-        btnBuscarPersonal.setFont(new java.awt.Font("SansSerif", 1, 12)); // NOI18N
-        btnBuscarPersonal.setForeground(new java.awt.Color(255, 255, 255));
-        btnBuscarPersonal.setText("Buscar");
-        btnBuscarPersonal.setPreferredSize(new java.awt.Dimension(100, 38));
-
-        tblPersonal.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {},
-            new String [] {"ID", "Código", "Cédula", "Empleado", "Ingreso", "Contrato", "Horario", "Salario", "Estado"}
-        ));
-        jScrollPane1.setViewportView(tblPersonal);
-
-        lblBuscarPersonal.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
-        lblBuscarPersonal.setForeground(new java.awt.Color(107, 127, 153));
-        lblBuscarPersonal.setText("Buscar planes, alimentos o clientes...");
-        lblBuscarPersonal.setPreferredSize(new java.awt.Dimension(500, 20));
-
-        lblCantidadPersonal.setText("0 registros encontrados");
-
-        javax.swing.GroupLayout pnlTablaPersonalLayout = new javax.swing.GroupLayout(pnlTablaPersonal);
-        pnlTablaPersonal.setLayout(pnlTablaPersonalLayout);
-        pnlTablaPersonalLayout.setHorizontalGroup(
-            pnlTablaPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlTablaPersonalLayout.createSequentialGroup()
-                .addGap(18, 18, 18)
-                .addGroup(pnlTablaPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lblBuscarPersonal)
-                    .addGroup(pnlTablaPersonalLayout.createSequentialGroup()
-                        .addComponent(txtBuscarPersonal, javax.swing.GroupLayout.DEFAULT_SIZE, 760, Short.MAX_VALUE)
-                        .addGap(12, 12, 12)
-                        .addComponent(btnBuscarPersonal, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(lblCantidadPersonal, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1090, Short.MAX_VALUE))
-                .addGap(18, 18, 18))
-        );
-        pnlTablaPersonalLayout.setVerticalGroup(
-            pnlTablaPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlTablaPersonalLayout.createSequentialGroup()
-                .addGap(14, 14, 14)
-                .addComponent(lblBuscarPersonal)
-                .addGap(6, 6, 6)
-                .addGroup(pnlTablaPersonalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txtBuscarPersonal, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnBuscarPersonal, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblCantidadPersonal))
-                .addGap(12, 12, 12)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE)
-                .addGap(16, 16, 16))
-        );
-
-        javax.swing.GroupLayout pnlBaseNutricionLayout = new javax.swing.GroupLayout(pnlBaseNutricion);
-        pnlBaseNutricion.setLayout(pnlBaseNutricionLayout);
-        pnlBaseNutricionLayout.setHorizontalGroup(
-            pnlBaseNutricionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(pnlEncabezadoPersonal, javax.swing.GroupLayout.DEFAULT_SIZE, 1175, Short.MAX_VALUE)
-            .addGroup(pnlBaseNutricionLayout.createSequentialGroup()
-                .addGap(18, 18, 18)
-                .addGroup(pnlBaseNutricionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(pnlFormularioPersonal, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(pnlTablaPersonal, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(18, 18, 18))
-        );
-        pnlBaseNutricionLayout.setVerticalGroup(
-            pnlBaseNutricionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlBaseNutricionLayout.createSequentialGroup()
-                .addComponent(pnlEncabezadoPersonal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(14, 14, 14)
-                .addComponent(pnlFormularioPersonal, javax.swing.GroupLayout.PREFERRED_SIZE, 285, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(14, 14, 14)
-                .addComponent(pnlTablaPersonal, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(18, 18, 18))
-        );
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(pnlBaseNutricion, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(pnlBaseNutricion, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-    }// </editor-fold>//GEN-END:initComponents
-
-    private void btnGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarActionPerformed
-        guardarRegistro();
-    }//GEN-LAST:event_btnGuardarActionPerformed
-
-    private void txtBuscarPersonalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtBuscarPersonalActionPerformed
-        buscarRegistros();
-    }//GEN-LAST:event_txtBuscarPersonalActionPerformed
-
-    private void btnLimpiarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarActionPerformed
-        limpiarFormulario();
-    }//GEN-LAST:event_btnLimpiarActionPerformed
-
-    private void btnModificarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnModificarActionPerformed
-        modificarRegistro();
-    }//GEN-LAST:event_btnModificarActionPerformed
-
-    private void btnDesactivarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDesactivarActionPerformed
-        desactivarRegistro();
-    }//GEN-LAST:event_btnDesactivarActionPerformed
-
-    private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarActionPerformed
-        eliminarRegistro();
-    }//GEN-LAST:event_btnEliminarActionPerformed
-
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnBuscarPersonal;
-    private javax.swing.JButton btnDesactivar;
-    private javax.swing.JButton btnEliminar;
-    private javax.swing.JButton btnGuardar;
-    private javax.swing.JButton btnLimpiar;
-    private javax.swing.JButton btnModificar;
-    private javax.swing.JComboBox<modelo.Persona> cboPersona;
-    private javax.swing.JCheckBox chkEstadoEmpleado;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JLabel lblBuscarPersonal;
-    private javax.swing.JLabel lblCamposObligatorios;
-    private javax.swing.JLabel lblCantidadPersonal;
-    private javax.swing.JLabel lblCedulaPersona;
-    private javax.swing.JLabel lblCodigoEmpleado;
-    private javax.swing.JLabel lblFechaIngreso;
-    private javax.swing.JLabel lblModuloPersonal;
-    private javax.swing.JLabel lblTurno;
-    private javax.swing.JLabel lblPersona;
-    private javax.swing.JLabel lblTipoContrato;
-    private javax.swing.JLabel lblSalario;
-    private javax.swing.JLabel lblTituloPersonal;
-    private javax.swing.JLabel lblTituloFormulario;
-    private javax.swing.JPanel pnlBaseNutricion;
-    private javax.swing.JPanel pnlEncabezadoPersonal;
-    private javax.swing.JPanel pnlFormularioPersonal;
-    private javax.swing.JPanel pnlTablaPersonal;
-    private javax.swing.JTable tblPersonal;
-    private javax.swing.JTextField txtBuscarPersonal;
-    private javax.swing.JTextField txtCedulaPersona;
-    private javax.swing.JTextField txtCodigoEmpleado;
-    private javax.swing.JTextField txtFechaIngreso;
-    private javax.swing.JTextField txtTurno;
-    private javax.swing.JComboBox<String> cboTipoContrato;
-    private javax.swing.JTextField txtSalario;
-    // End of variables declaration//GEN-END:variables
+    private void informar(boolean ok) {
+        javax.swing.JOptionPane.showMessageDialog(this,
+                controlador.getMensaje().isBlank() ? (ok ? "Operación completada." : "No fue posible completar la operación.") : controlador.getMensaje(),
+                "GYMNOVA", ok ? javax.swing.JOptionPane.INFORMATION_MESSAGE : javax.swing.JOptionPane.WARNING_MESSAGE);
+    }
+    private void advertencia(String s) {
+        javax.swing.JOptionPane.showMessageDialog(this, s, "GYMNOVA", javax.swing.JOptionPane.WARNING_MESSAGE);
+    }
+    private DefaultTableModel modelo(String[] columnas) {
+        return new DefaultTableModel(columnas, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        };
+    }
 }

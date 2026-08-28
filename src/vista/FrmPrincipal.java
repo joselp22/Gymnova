@@ -12,6 +12,7 @@ public class FrmPrincipal extends javax.swing.JFrame {
     
     private PnlPersonas panelPersonas;
     private PnlClientes panelClientes;
+    private PnlClientesNutricionista panelClientesNutricionista;
     private PnlPersonal panelPersonal;
     private PnlSeguridad panelSeguridad;
     private PnlMembresiasCobro panelMembresias;
@@ -22,10 +23,14 @@ public class FrmPrincipal extends javax.swing.JFrame {
     private PnlRutinasAdministrador panelRutinasAdministrador;
     private PnlRutinasEntrenador panelRutinasEntrenador;
     private PnlSalud panelSalud;
+    private PnlSeguimientoNutricionista panelSeguimientoNutricionista;
+    private PnlNutricionAdministrador panelNutricionAdministrador;
     private PnlNutricion panelNutricion;
     private PnlFinanzas panelFinanzas;
     private PnlReportes panelReportes;
+    private PnlReportesNutricionista panelReportesNutricionista;
     private PnlConfiguracion panelConfiguracion;
+    private PnlConfiguracionNutricionista panelConfiguracionNutricionista;
     private javax.swing.JPanel panelInicio;
     private final java.util.Map<String, PnlModuloAplicacion> panelesExperiencia
             = new java.util.HashMap<>();
@@ -603,7 +608,7 @@ private javax.swing.JButton botonAccion(String texto, java.awt.Color fondo,
  * Devuelve cadena vacia si no hay cliente en atencion o el rol no aplica.
  */
 private String tituloClienteAtendido() {
-    if (!java.util.Set.of("RECEPCIONISTA", "ENTRENADOR", "NUTRICIONISTA")
+    if (!java.util.Set.of("RECEPCIONISTA", "ENTRENADOR")
             .contains(rolVentana)) {
         return "";
     }
@@ -781,6 +786,22 @@ private boolean puedeGestionarModulo(String modulo) {
 
     if (esAdministrador()) {
         mostrarGestionClientes();
+        return;
+    }
+
+    if ("NUTRICIONISTA".equals(rolVentana)) {
+        if (panelClientesNutricionista == null) {
+            panelClientesNutricionista = new PnlClientesNutricionista(
+                    this::refrescarBannerCliente
+            );
+        } else {
+            panelClientesNutricionista.refrescarDatos();
+        }
+        mostrarVista(
+                panelClientesNutricionista,
+                "Mis clientes",
+                btnClientes
+        );
         return;
     }
 
@@ -1053,6 +1074,19 @@ private void mostrarGestionClientes() {
             mostrarGestionSalud();
             return;
         }
+        if ("NUTRICIONISTA".equals(rolVentana)) {
+            if (panelSeguimientoNutricionista == null) {
+                panelSeguimientoNutricionista = new PnlSeguimientoNutricionista();
+            } else {
+                panelSeguimientoNutricionista.refrescarDatos();
+            }
+            mostrarVista(
+                    panelSeguimientoNutricionista,
+                    "Seguimiento",
+                    btnSalud
+            );
+            return;
+        }
         // Para el cliente, "Mi progreso" es el resumen semanal de su
         // rutina en lugar del panel genérico de gestión de salud.
         if ("CLIENTE".equals(rolVentana)) {
@@ -1084,22 +1118,48 @@ private void mostrarGestionClientes() {
         if (!verificarPermisoVista("NUTRICION", "VER")) {
             return;
         }
+
+        // El Administrador tiene una pantalla propia de supervision y
+        // mantenimiento de catalogos, equivalente al patron usado en Rutinas.
         if (esAdministrador()) {
+            mostrarNutricionAdministrador();
+            return;
+        }
+
+        // El Nutricionista entra directamente a su espacio profesional.
+        if ("NUTRICIONISTA".equals(rolVentana)) {
             mostrarGestionNutricion();
             return;
         }
+
+        // Otros roles autorizados (por ejemplo Cliente) conservan su
+        // experiencia de consulta sin acceder a las pantallas profesionales.
         mostrarExperiencia(
                 "NUTRICION", btnNutricion.getText(), btnNutricion,
                 this::mostrarGestionNutricion
         );
     }
+
+    private void mostrarNutricionAdministrador() {
+        if (panelNutricionAdministrador == null) {
+            panelNutricionAdministrador = new PnlNutricionAdministrador();
+        } else {
+            panelNutricionAdministrador.refrescarDatos();
+        }
+        mostrarVista(
+                panelNutricionAdministrador,
+                "Supervision de nutricion",
+                btnNutricion
+        );
+    }
+
     private void mostrarGestionNutricion() {
         if (panelNutricion == null) {
             panelNutricion = new PnlNutricion();
         } else {
             panelNutricion.refrescarDatos();
         }
-        mostrarVista(panelNutricion, "Nutricion", btnNutricion);
+        mostrarVista(panelNutricion, "Gestion nutricional", btnNutricion);
     }
     private void mostrarFinanzas() {
         if (!verificarRutaRol("FINANZAS")) {
@@ -1168,6 +1228,19 @@ private void mostrarGestionClientes() {
             mostrarGestionReportes();
             return;
         }
+        if ("NUTRICIONISTA".equals(rolVentana)) {
+            if (panelReportesNutricionista == null) {
+                panelReportesNutricionista = new PnlReportesNutricionista();
+            } else {
+                panelReportesNutricionista.refrescarDatos();
+            }
+            mostrarVista(
+                    panelReportesNutricionista,
+                    "Mis reportes",
+                    btnReportes
+            );
+            return;
+        }
         mostrarExperiencia(
                 "REPORTES", btnReportes.getText(), btnReportes,
                 this::mostrarGestionReportes
@@ -1190,6 +1263,19 @@ private void mostrarGestionClientes() {
         }
         if (esAdministrador()) {
             mostrarGestionConfiguracion();
+            return;
+        }
+        if ("NUTRICIONISTA".equals(rolVentana)) {
+            if (panelConfiguracionNutricionista == null) {
+                panelConfiguracionNutricionista = new PnlConfiguracionNutricionista();
+            } else {
+                panelConfiguracionNutricionista.refrescarDatos();
+            }
+            mostrarVista(
+                    panelConfiguracionNutricionista,
+                    "Configuración",
+                    btnConfiguracion
+            );
             return;
         }
         mostrarExperiencia(

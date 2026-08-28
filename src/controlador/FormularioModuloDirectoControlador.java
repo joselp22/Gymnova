@@ -20,6 +20,7 @@ import modelo.Alimento;
 import modelo.AsignacionRutina;
 import modelo.Asistencia;
 import modelo.ClaseGrupal;
+import modelo.Cliente;
 import modelo.Comprobante;
 import modelo.ContieneEjercicio;
 import modelo.DetalleFactura;
@@ -40,11 +41,10 @@ import modelo.Reserva;
 import modelo.ResultadoIndicador;
 import modelo.Rutina;
 import modelo.RutinaDiaEntrenamiento;
-import utilidades.ClienteEnAtencion;
 import utilidades.CalendarioSelector;
+import utilidades.ClienteEnAtencion;
 import utilidades.EstilosComponentes;
 import utilidades.GestorConsultaModulo;
-import utilidades.SesionUsuario;
 
 /**
  * Controla los formularios CRUD que ya existen dentro de los paneles
@@ -118,8 +118,6 @@ public class FormularioModuloDirectoControlador {
     private final AlimentoControlador alimentoControlador = new AlimentoControlador();
     private final IncluyeAlimentoControlador incluyeControlador
             = new IncluyeAlimentoControlador();
-    private final NutricionistaControlador nutricionistaControlador
-            = new NutricionistaControlador();
 
     private final PagoControlador pagoControlador = new PagoControlador();
     private final FacturaControlador facturaControlador = new FacturaControlador();
@@ -282,7 +280,12 @@ public class FormularioModuloDirectoControlador {
                     recargarRelacion(cboReferencia, "idPlanNutricional");
                     recargarRelacion(cboPersona, "idAlimento");
                 }
-                case "NUTRICION|Nutricionistas habilitados" -> recargarRelacion(cboReferencia, "idNutricionista");
+                case "NUTRICION|Resultados de indicadores" -> {
+                    recargarRelacion(cboReferencia, "idEvaluacion");
+                    recargarRelacion(cboPersona, "idIndicador");
+                }
+                case "NUTRICION|Recomendaciones profesionales" ->
+                    recargarRelacion(cboReferencia, "idEvaluacion");
 
                 case "FINANZAS|Pagos" -> {
                     recargarRelacion(cboReferencia, "idFactura");
@@ -352,6 +355,68 @@ public class FormularioModuloDirectoControlador {
             advertencia(ex.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Cambia los campos visibles entre modo edicion y modo consulta.
+     * La vista llama a este metodo despues de configurar cada proceso.
+     */
+    public void establecerSoloLectura(boolean soloLectura) {
+        cboReferencia.setEnabled(!soloLectura);
+        txtFecha.setEnabled(!soloLectura);
+        txtNumero.setEnabled(!soloLectura);
+        cboPersona.setEnabled(!soloLectura);
+        txtSegundo.setEnabled(!soloLectura);
+        txtTexto.setEnabled(!soloLectura);
+        chkEstado.setEnabled(!soloLectura);
+    }
+
+    /** Finaliza el plan seleccionado usando el flujo propio del Nutricionista. */
+    public boolean finalizarPlanSeleccionado() {
+        if (!gestorConsulta.verificarPermiso("MODIFICAR")) {
+            return false;
+        }
+
+        Object seleccionado = gestorConsulta.getSeleccionado();
+        if (!(seleccionado instanceof PlanNutricional plan)
+                || plan.getIdPlanNutricional() == null) {
+            advertencia("Seleccione un plan nutricional de la tabla.");
+            return false;
+        }
+
+        if ("FINALIZADO".equalsIgnoreCase(plan.getEstadoPlan())) {
+            advertencia("El plan seleccionado ya se encuentra finalizado.");
+            return false;
+        }
+
+        int opcion = JOptionPane.showConfirmDialog(
+                padre,
+                "¿Finalizar el plan nutricional seleccionado?",
+                "Finalizar plan",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+        if (opcion != JOptionPane.YES_OPTION) {
+            return false;
+        }
+
+        boolean correcto = flujoNutricionista.finalizarPlan(
+                plan.getIdPlanNutricional());
+
+        if (correcto) {
+            JOptionPane.showMessageDialog(
+                    padre,
+                    "Plan nutricional finalizado correctamente.",
+                    "GYMNOVA",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+            gestorConsulta.cargar();
+            limpiar();
+        } else {
+            advertencia(flujoNutricionista.getMensaje());
+        }
+
+        return correcto;
     }
 
     public void limpiar() {
@@ -834,6 +899,14 @@ public class FormularioModuloDirectoControlador {
 
     private void configurarNutricion() {
         switch (procesoActual()) {
+            case "Clientes" -> {
+                labels("Codigo de cliente", "Fecha de registro", "Peso inicial (kg)",
+                        "", "Peso meta (kg)", "Observaciones");
+                cargarTextoReferencia(null);
+                deshabilitarComboPersona();
+                chkEstado.setText("Cliente activo");
+                chkEstado.setSelected(true);
+            }
             case "Planes asignados a clientes" -> {
                 labels("Nutricionista *", "Fecha de inicio *", "Calorias objetivo",
                         "Cliente *", "Nombre del plan *", "Restricciones generales");
@@ -849,9 +922,18 @@ public class FormularioModuloDirectoControlador {
                         "", "Proteinas (g)", "Descripcion");
                 cargarTextoReferencia(null);
                 deshabilitarComboPersona();
-                chkEstado.setText("Alimento habilitado");
+                chkEstado.setText("Catalogo de alimentos");
                 chkEstado.setSelected(true);
                 chkEstado.setEnabled(false);
+            }
+            case "Catalogo de indicadores" -> {
+                labels("Nombre del indicador *", "Unidad de medida *", "Valor minimo *",
+                        "Categoria", "Valor maximo *", "Descripcion");
+                cargarTextoReferencia(null);
+                cargarOpcionesPersona(
+                        "GENERAL", "CORPORAL", "CARDIOVASCULAR", "NUTRICIONAL");
+                chkEstado.setText("Indicador activo");
+                chkEstado.setSelected(true);
             }
             case "Comidas y porciones del plan" -> {
                 labels("Plan nutricional *", "Dia de la semana *", "Cantidad *",
@@ -865,12 +947,33 @@ public class FormularioModuloDirectoControlador {
                 chkEstado.setText("Detalle activo");
                 chkEstado.setSelected(true);
             }
-            case "Nutricionistas habilitados" -> {
+            case "Resultados de indicadores" -> {
+                labels("Evaluacion *", "Fecha de registro *", "Valor obtenido *",
+                        "Indicador *", "Clasificacion", "Observaciones");
+                cargarRelacion(cboReferencia, "idEvaluacion", null);
+                cargarRelacion(cboPersona, "idIndicador", null);
+                txtFecha.setText(LocalDate.now().toString());
+                chkEstado.setText("Fuera de rango");
+                chkEstado.setSelected(false);
+                chkEstado.setEnabled(false);
+            }
+            case "Recomendaciones profesionales" -> {
+                labels("Evaluacion *", "Fecha de inicio", "Tipo de recomendacion *",
+                        "Prioridad *", "Fecha de finalizacion", "Descripcion *");
+                cargarRelacion(cboReferencia, "idEvaluacion", null);
+                cargarOpcionesPersona("BAJA", "MEDIA", "ALTA");
+                txtFecha.setText(LocalDate.now().toString());
+                txtNumero.setText("NUTRICIONAL");
+                chkEstado.setText("Recomendacion activa");
+                chkEstado.setSelected(true);
+            }
+            case "Nutricionistas" -> {
                 labels("Nutricionista", "Inicio de profesion", "Numero de licencia",
-                        "Estado de licencia", "", "");
-                cargarRelacion(cboReferencia, "idNutricionista", null);
+                        "Estado de licencia", "Codigo de empleado", "");
+                cargarTextoReferencia(null);
                 cargarOpcionesPersona("ACTIVA", "SUSPENDIDA", "VENCIDA");
-                deshabilitar(txtSegundo, txtTexto, chkEstado);
+                chkEstado.setText("Empleado activo");
+                chkEstado.setSelected(true);
             }
             default -> {
             }
@@ -881,9 +984,12 @@ public class FormularioModuloDirectoControlador {
         return switch (procesoActual()) {
             case "Planes asignados a clientes" -> guardarPlanNutricional(existente);
             case "Catalogo de alimentos" -> guardarAlimento(existente);
+            case "Catalogo de indicadores" -> guardarIndicador(existente);
             case "Comidas y porciones del plan" -> guardarIncluyeAlimento(existente);
-            case "Nutricionistas habilitados" -> guardarNutricionistaEspecializado(existente);
-            default -> new ResultadoOperacion(false, "Seleccione un proceso nutricional valido.");
+            case "Resultados de indicadores" -> guardarResultado(existente);
+            case "Recomendaciones profesionales" -> guardarRecomendacion(existente);
+            default -> new ResultadoOperacion(false,
+                    "La opcion seleccionada es solo de consulta.");
         };
     }
 
@@ -949,22 +1055,6 @@ public class FormularioModuloDirectoControlador {
                 ? incluyeControlador.registrar(detalle)
                 : incluyeControlador.modificar(detalle);
         return new ResultadoOperacion(ok, incluyeControlador.getMensaje());
-    }
-
-    private ResultadoOperacion guardarNutricionistaEspecializado(Object existente) {
-        if (existente == null) {
-            return new ResultadoOperacion(false,
-                    "Los nutricionistas nuevos se crean desde Personal. Aqui puede consultar o modificar su informacion profesional.");
-        }
-        if (!(existente instanceof Nutricionista nutricionista)) {
-            return tipoIncorrecto("nutricionista");
-        }
-        nutricionista.setFechaInicioProfesion(fechaOpcional(txtFecha.getText(), "Inicio de profesion"));
-        nutricionista.setNumeroLicencia(requerido(txtNumero.getText(), "Ingrese el numero de licencia."));
-        String estado = valorCombo(cboPersona);
-        nutricionista.setEstadoLicencia(estado == null ? "ACTIVA" : estado);
-        boolean ok = nutricionistaControlador.modificar(nutricionista);
-        return new ResultadoOperacion(ok, nutricionistaControlador.getMensaje());
     }
 
     // ---------------------------------------------------------------------
@@ -1264,7 +1354,14 @@ public class FormularioModuloDirectoControlador {
     }
 
     private void cargarNutricion(Object registro) {
-        if (registro instanceof PlanNutricional p) {
+        if (registro instanceof Cliente c) {
+            setTextoReferencia(c.getCodigoCliente());
+            txtFecha.setText(valor(c.getFechaRegistro()));
+            txtNumero.setText(valor(c.getPesoInicial()));
+            txtSegundo.setText(valor(c.getPesoMeta()));
+            txtTexto.setText(valor(c.getObservaciones()));
+            chkEstado.setSelected(c.isEstadoCliente());
+        } else if (registro instanceof PlanNutricional p) {
             seleccionarId(cboReferencia, p.getIdNutricionista());
             seleccionarId(cboPersona, p.getIdCliente());
             txtFecha.setText(valor(p.getFechaInicio()));
@@ -1278,6 +1375,15 @@ public class FormularioModuloDirectoControlador {
             txtNumero.setText(valor(a.getPorcionReferenciaG()));
             txtSegundo.setText(valor(a.getProteinasG()));
             txtTexto.setText(valor(a.getDescripcion()));
+            chkEstado.setSelected(true);
+        } else if (registro instanceof IndicadorSalud i) {
+            setTextoReferencia(i.getNombreIndicador());
+            txtFecha.setText(valor(i.getUnidadMedida()));
+            txtNumero.setText(valor(i.getValorMinimoReferencia()));
+            seleccionarTextoCombo(cboPersona, i.getCategoria());
+            txtSegundo.setText(valor(i.getValorMaximoReferencia()));
+            txtTexto.setText(valor(i.getDescripcion()));
+            chkEstado.setSelected(i.isEstadoIndicador());
         } else if (registro instanceof IncluyeAlimento i) {
             seleccionarId(cboReferencia, i.getIdPlanNutricional());
             seleccionarId(cboPersona, i.getIdAlimento());
@@ -1288,11 +1394,29 @@ public class FormularioModuloDirectoControlador {
             String indicacion = valor(i.getIndicaciones());
             txtTexto.setText(indicacion.isBlank() ? unidad : unidad + " | " + indicacion);
             chkEstado.setSelected("ACTIVO".equalsIgnoreCase(i.getEstadoDetalle()));
+        } else if (registro instanceof ResultadoIndicador r) {
+            seleccionarId(cboReferencia, r.getIdEvaluacion());
+            seleccionarId(cboPersona, r.getIdIndicador());
+            txtFecha.setText(valor(r.getFechaRegistro()));
+            txtNumero.setText(valor(r.getValorObtenido()));
+            txtSegundo.setText(valor(r.getClasificacion()));
+            txtTexto.setText(valor(r.getObservaciones()));
+            chkEstado.setSelected(r.isFueraDeRango());
+        } else if (registro instanceof Recomendacion r) {
+            seleccionarId(cboReferencia, r.getIdEvaluacion());
+            txtFecha.setText(valor(r.getFechaInicio()));
+            txtNumero.setText(valor(r.getTipoRecomendacion()));
+            seleccionarTextoCombo(cboPersona, r.getPrioridad());
+            txtSegundo.setText(valor(r.getFechaFin()));
+            txtTexto.setText(valor(r.getDescripcion()));
+            chkEstado.setSelected("ACTIVA".equalsIgnoreCase(r.getEstadoRecomendacion()));
         } else if (registro instanceof Nutricionista n) {
-            seleccionarId(cboReferencia, n.getIdPersona());
+            setTextoReferencia(n.getNombreCompleto());
             txtFecha.setText(valor(n.getFechaInicioProfesion()));
             txtNumero.setText(valor(n.getNumeroLicencia()));
             seleccionarTextoCombo(cboPersona, n.getEstadoLicencia());
+            txtSegundo.setText(valor(n.getCodigoEmpleado()));
+            chkEstado.setSelected(n.isEstadoEmpleado());
         }
     }
 
