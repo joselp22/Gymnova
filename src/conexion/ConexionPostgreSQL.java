@@ -15,11 +15,11 @@ import java.sql.SQLException;
 public final class ConexionPostgreSQL {
 
     private static final String URL_PREDETERMINADA
-            = "jdbc:postgresql://localhost:5432/gymnova_db";
+            = "jdbc:postgresql://dpg-da8eru3tqb8s73a0r44g-a.virginia-postgres.render.com:5432/gymnova_db?sslmode=require";
 
-    private static final String USUARIO_PREDETERMINADO = "postgres";
+    private static final String USUARIO_PREDETERMINADO = "gymnova_db_user";
 
-    private static final String CONTRASENA_PREDETERMINADA = "1510";
+    private static final String CONTRASENA_PREDETERMINADA = "n14bKerizAJvXaPaowFGK9iWhePtTWxO";
     
     private ConexionPostgreSQL() {
         // Evita crear objetos de esta clase.
