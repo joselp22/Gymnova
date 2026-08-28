@@ -22,6 +22,7 @@ public class FrmPrincipal extends javax.swing.JFrame {
     private PnlRutinasAdministrador panelRutinasAdministrador;
     private PnlRutinasEntrenador panelRutinasEntrenador;
     private PnlSalud panelSalud;
+    private PnlNutricionAdministrador panelNutricionAdministrador;
     private PnlNutricion panelNutricion;
     private PnlFinanzas panelFinanzas;
     private PnlReportes panelReportes;
@@ -1057,22 +1058,48 @@ private void mostrarGestionClientes() {
         if (!verificarPermisoVista("NUTRICION", "VER")) {
             return;
         }
+
+        // El Administrador tiene una pantalla propia de supervision y
+        // mantenimiento de catalogos, equivalente al patron usado en Rutinas.
         if (esAdministrador()) {
+            mostrarNutricionAdministrador();
+            return;
+        }
+
+        // El Nutricionista entra directamente a su espacio profesional.
+        if ("NUTRICIONISTA".equals(rolVentana)) {
             mostrarGestionNutricion();
             return;
         }
+
+        // Otros roles autorizados (por ejemplo Cliente) conservan su
+        // experiencia de consulta sin acceder a las pantallas profesionales.
         mostrarExperiencia(
                 "NUTRICION", btnNutricion.getText(), btnNutricion,
                 this::mostrarGestionNutricion
         );
     }
+
+    private void mostrarNutricionAdministrador() {
+        if (panelNutricionAdministrador == null) {
+            panelNutricionAdministrador = new PnlNutricionAdministrador();
+        } else {
+            panelNutricionAdministrador.refrescarDatos();
+        }
+        mostrarVista(
+                panelNutricionAdministrador,
+                "Supervision de nutricion",
+                btnNutricion
+        );
+    }
+
     private void mostrarGestionNutricion() {
         if (panelNutricion == null) {
             panelNutricion = new PnlNutricion();
         } else {
             panelNutricion.refrescarDatos();
         }
-        mostrarVista(panelNutricion, "Nutricion", btnNutricion);
+        mostrarVista(panelNutricion, "Gestion nutricional", btnNutricion);
     }
     private void mostrarFinanzas() {
         if (!verificarRutaRol("FINANZAS")) {
