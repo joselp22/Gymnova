@@ -350,6 +350,35 @@ public class PnlInicioAdministrador extends javax.swing.JPanel {
         jScrollPaneUltimos.getViewport().setBackground(
                 new java.awt.Color(7, 21, 43)
         );
+        aplicarAnchosColumnasYTooltips();
+    }
+
+    private void aplicarAnchosColumnasYTooltips() {
+        int[] anchos = {40, 220, 160, 110, 110, 110};
+        for (int i = 0; i < anchos.length
+                && i < tblUltimosClientes.getColumnModel().getColumnCount(); i++) {
+            tblUltimosClientes.getColumnModel().getColumn(i)
+                    .setPreferredWidth(anchos[i]);
+        }
+        javax.swing.table.DefaultTableCellRenderer conTooltip =
+                new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public java.awt.Component getTableCellRendererComponent(
+                    javax.swing.JTable tabla, Object valor,
+                    boolean seleccionado, boolean enfocado,
+                    int fila, int columna) {
+                java.awt.Component c = super.getTableCellRendererComponent(
+                        tabla, valor, seleccionado, enfocado, fila, columna);
+                setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+                setToolTipText(valor == null ? null : valor.toString());
+                return c;
+            }
+        };
+        for (int i = 0;
+                i < tblUltimosClientes.getColumnModel().getColumnCount(); i++) {
+            tblUltimosClientes.getColumnModel().getColumn(i)
+                    .setCellRenderer(conTooltip);
+        }
     }
 
     @SuppressWarnings("unchecked")

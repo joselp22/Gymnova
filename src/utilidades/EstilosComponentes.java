@@ -68,8 +68,21 @@ public final class EstilosComponentes {
         if (tabla == null) {
             return;
         }
+        // Renderer con tooltip: cuando el ancho de la columna es menor que
+        // el texto (nombres largos, etc.), se muestra el valor completo al
+        // pasar el puntero por encima, evitando que quede oculto.
         javax.swing.table.DefaultTableCellRenderer centro
-                = new javax.swing.table.DefaultTableCellRenderer();
+                = new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public java.awt.Component getTableCellRendererComponent(
+                    javax.swing.JTable t, Object valor,
+                    boolean sel, boolean foco, int fila, int col) {
+                java.awt.Component c = super.getTableCellRendererComponent(
+                        t, valor, sel, foco, fila, col);
+                setToolTipText(valor == null ? null : valor.toString());
+                return c;
+            }
+        };
         centro.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         // setDefaultRenderer sobrevive a cambios de modelo (setModel), así
         // los paneles que recargan sus datos mantienen el centrado.

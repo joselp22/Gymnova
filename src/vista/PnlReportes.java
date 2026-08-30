@@ -337,34 +337,132 @@ public class PnlReportes extends javax.swing.JPanel {
         removeAll();
         setLayout(new java.awt.BorderLayout(0, 8));
 
-        javax.swing.JPanel barra = new javax.swing.JPanel(
-                new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 8, 8));
+        // Barra superior con dos filas: título + fila de botones que se
+        // adapta con FlowLayout (LEFT). Cada botón abre un diálogo
+        // dedicado. Todos usan el mismo azul y padding para verse iguales.
+        javax.swing.JPanel barra = new javax.swing.JPanel();
+        barra.setLayout(new javax.swing.BoxLayout(
+                barra, javax.swing.BoxLayout.Y_AXIS));
         barra.setBackground(new java.awt.Color(234, 242, 251));
+        barra.setBorder(javax.swing.BorderFactory.createEmptyBorder(
+                6, 8, 6, 8));
 
         javax.swing.JLabel titulo = new javax.swing.JLabel(
                 "Reportes especializados:");
         titulo.setFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 13));
         titulo.setForeground(new java.awt.Color(23, 42, 67));
+        titulo.setAlignmentX(LEFT_ALIGNMENT);
         barra.add(titulo);
+        barra.add(javax.swing.Box.createVerticalStrut(4));
 
-        javax.swing.JButton btnMembresias = new javax.swing.JButton(
-                "Reporte de mensualidades imprimible");
-        btnMembresias.setBackground(new java.awt.Color(8, 124, 255));
-        btnMembresias.setForeground(java.awt.Color.WHITE);
-        btnMembresias.setFocusPainted(false);
-        btnMembresias.addActionListener(e -> abrirReporteMensualidades());
-        barra.add(btnMembresias);
+        javax.swing.JPanel fila = new javax.swing.JPanel(
+                new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 8, 4));
+        fila.setBackground(new java.awt.Color(234, 242, 251));
+        fila.setAlignmentX(LEFT_ALIGNMENT);
+
+        fila.add(botonReporte("Mensualidades",
+                e -> abrir(new DlgReporteMembresias(ventana()))));
+        fila.add(botonReporte("Membresías (detalle)",
+                e -> abrir(new DlgReporteMembresiasDetalle(ventana()))));
+        fila.add(botonReporte("Panorama de clientes",
+                e -> abrir(new DlgReporteClientes(ventana()))));
+        fila.add(botonReporte("Financiero",
+                e -> abrir(new DlgReporteFinanciero(ventana()))));
+        fila.add(botonReporte("Ocupación / clases",
+                e -> abrir(new DlgReporteOcupacion(ventana()))));
+        fila.add(botonReporte("Desempeño profesional",
+                e -> abrir(new DlgReporteDesempeno(ventana()))));
+        fila.add(botonReporte("Bitácora",
+                e -> abrir(new DlgReporteBitacora(ventana()))));
+
+        // Botón especial: consolida TODO en un archivo HTML y lo descarga
+        // con el nombre "Reporte YYYY-MM-DD.html" al destino que elija.
+        javax.swing.JButton btnConsolidado = new javax.swing.JButton(
+                "⬇ Descargar reporte consolidado");
+        btnConsolidado.setBackground(new java.awt.Color(34, 197, 94));
+        btnConsolidado.setForeground(java.awt.Color.WHITE);
+        btnConsolidado.setFocusPainted(false);
+        btnConsolidado.setBorder(javax.swing.BorderFactory.createEmptyBorder(
+                6, 14, 6, 14));
+        btnConsolidado.addActionListener(e -> descargarConsolidado());
+        fila.add(btnConsolidado);
+
+        barra.add(fila);
 
         add(barra, java.awt.BorderLayout.NORTH);
         add(pnlBaseReportes, java.awt.BorderLayout.CENTER);
     }
 
-    private void abrirReporteMensualidades() {
-        java.awt.Window ventana = javax.swing.SwingUtilities
-                .getWindowAncestor(this);
-        java.awt.Frame padre = ventana instanceof java.awt.Frame f
-                ? f : null;
-        new DlgReporteMembresias(padre).setVisible(true);
+    private java.awt.Frame ventana() {
+        java.awt.Window w = javax.swing.SwingUtilities.getWindowAncestor(this);
+        return w instanceof java.awt.Frame f ? f : null;
+    }
+
+    private javax.swing.JButton botonReporte(String etiqueta,
+            java.awt.event.ActionListener accion) {
+        javax.swing.JButton b = new javax.swing.JButton(etiqueta);
+        b.setBackground(new java.awt.Color(8, 124, 255));
+        b.setForeground(java.awt.Color.WHITE);
+        b.setFocusPainted(false);
+        b.setBorder(javax.swing.BorderFactory.createEmptyBorder(
+                6, 12, 6, 12));
+        b.addActionListener(accion);
+        return b;
+    }
+
+    private void abrir(javax.swing.JDialog dlg) {
+        dlg.setVisible(true);
+    }
+
+    /**
+     * Genera un archivo HTML consolidado con la información de todos
+     * los reportes especializados (resumen, membresías, financiero,
+     * clientes, ocupación, desempeño, bitácora) y lo guarda con el
+     * nombre "Reporte YYYY-MM-DD.html". Al terminar ofrece abrirlo en
+     * el navegador para revisar / imprimir / exportar como PDF.
+     */
+    private void descargarConsolidado() {
+        String nombreDefecto = utilidades.GeneradorReporteConsolidado
+                .nombreSugerido();
+        JFileChooser selector = new JFileChooser();
+        selector.setDialogTitle("Guardar reporte consolidado");
+        selector.setSelectedFile(new File(nombreDefecto));
+        selector.setFileFilter(
+                new javax.swing.filechooser.FileNameExtensionFilter(
+                        "Archivos HTML (*.html)", "html"));
+        if (selector.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+        File destino = selector.getSelectedFile();
+        if (!destino.getName().toLowerCase().endsWith(".html")) {
+            destino = new File(destino.getParentFile(),
+                    destino.getName() + ".html");
+        }
+        try {
+            utilidades.GeneradorReporteConsolidado.generarYGuardar(
+                    destino.toPath());
+        } catch (IOException | java.sql.SQLException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "No se pudo generar el reporte: " + ex.getMessage(),
+                    "GYMNOVA", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        int op = JOptionPane.showConfirmDialog(this,
+                "Reporte guardado en:\n" + destino.getAbsolutePath()
+                        + "\n\n¿Deseas abrirlo ahora en el navegador?",
+                "Reporte consolidado", JOptionPane.YES_NO_OPTION,
+                JOptionPane.INFORMATION_MESSAGE);
+        if (op == JOptionPane.YES_OPTION
+                && java.awt.Desktop.isDesktopSupported()) {
+            try {
+                java.awt.Desktop.getDesktop().browse(destino.toURI());
+            } catch (IOException | UnsupportedOperationException ex) {
+                JOptionPane.showMessageDialog(this,
+                        "No se pudo abrir el archivo automáticamente. "
+                        + "Ábrelo manualmente desde la ubicación indicada.",
+                        "GYMNOVA", JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
     }
 
     private void imprimirReporte() {

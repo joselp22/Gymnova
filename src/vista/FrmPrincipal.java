@@ -46,6 +46,13 @@ public class FrmPrincipal extends javax.swing.JFrame {
 
     initComponents();
 
+    // El .form fija lblTituloSeccion en 300 px y corta títulos largos
+    // como "Sin cliente en atención...". Lo dejamos crecer horizontalmente
+    // hasta el ancho del panel de encabezado.
+    lblTituloSeccion.setPreferredSize(null);
+    lblTituloSeccion.setMinimumSize(null);
+    lblTituloSeccion.setMaximumSize(null);
+
     rolVentana = utilidades.NavegacionRol.normalizarRol(
             utilidades.SesionUsuario.getUsuarioActual().getNombreRol()
     );
@@ -604,16 +611,20 @@ private javax.swing.JButton botonAccion(String texto, java.awt.Color fondo,
 }
 
 /**
- * Sufijo con el cliente atendido para los roles operativos.
- * Devuelve cadena vacia si no hay cliente en atencion o el rol no aplica.
+ * Sufijo con el cliente atendido en el título superior.
+ *
+ * Ya no se muestra el texto "Sin cliente en atención" (era ruido en el
+ * encabezado). Solo se añade "· Atendiendo: NOMBRE (CL#####)" cuando hay
+ * un cliente realmente seleccionado. Si no, el título aparece solo con
+ * el nombre del módulo (por ejemplo, "Dashboard").
  */
 private String tituloClienteAtendido() {
-    if (!java.util.Set.of("RECEPCIONISTA", "ENTRENADOR")
+    if (!java.util.Set.of("RECEPCIONISTA", "ENTRENADOR", "NUTRICIONISTA")
             .contains(rolVentana)) {
         return "";
     }
     if (!utilidades.ClienteEnAtencion.hay()) {
-        return "   ·   Sin cliente en atencion";
+        return "";
     }
     return "   ·   Atendiendo: "
             + utilidades.ClienteEnAtencion.descripcion();
@@ -731,15 +742,16 @@ private boolean puedeGestionarModulo(String modulo) {
     if ("ADMINISTRADOR".equals(rol)) {
         return true;
     }
+    // La vista "Reportes administrativos" (PnlReportes) queda reservada
+    // al Administrador. El resto de perfiles solo ve el panel informativo
+    // del módulo o su vista específica (por ejemplo, Nutricionista tiene
+    // su propio PnlReportesNutricionista).
     return switch (clave) {
         case "RECEPCIONISTA|CLIENTES", "RECEPCIONISTA|MEMBRESIAS",
                 "RECEPCIONISTA|ACCESO", "RECEPCIONISTA|FINANZAS",
-                "RECEPCIONISTA|REPORTES",
                 "ENTRENADOR|RUTINAS", "ENTRENADOR|SALUD",
-                "ENTRENADOR|REPORTES",
                 "NUTRICIONISTA|NUTRICION", "NUTRICIONISTA|SALUD",
-                "NUTRICIONISTA|REPORTES",
-                "CLIENTE|REPORTES", "CLIENTE|CONFIGURACION",
+                "CLIENTE|CONFIGURACION",
                 "ENTRENADOR|CONFIGURACION",
                 "NUTRICIONISTA|CONFIGURACION",
                 "RECEPCIONISTA|CONFIGURACION" -> true;
@@ -1098,11 +1110,25 @@ private void mostrarGestionClientes() {
             mostrarVista(panelProgresoCliente, "Mi progreso", btnSalud);
             return;
         }
+        // Para el entrenador, "Evaluaciones" se reemplaza por el panel de
+        // progreso de peso: selector de cliente + registro + gráfica.
+        if ("ENTRENADOR".equals(rolVentana)) {
+            if (panelProgresoPesoEntrenador == null) {
+                panelProgresoPesoEntrenador = new PnlProgresoPesoEntrenador();
+            } else {
+                panelProgresoPesoEntrenador.refrescarDatos();
+            }
+            mostrarVista(panelProgresoPesoEntrenador,
+                    "Evaluaciones", btnSalud);
+            return;
+        }
         mostrarExperiencia(
                 "SALUD", btnSalud.getText(), btnSalud,
                 this::mostrarGestionSalud
         );
     }
+
+    private PnlProgresoPesoEntrenador panelProgresoPesoEntrenador;
     private void mostrarGestionSalud() {
         if (panelSalud == null) {
             panelSalud = new PnlSalud();
@@ -1241,11 +1267,28 @@ private void mostrarGestionClientes() {
             );
             return;
         }
+        // El entrenador tiene su vista propia: peso, rutinas realizadas y
+        // cumplimiento de cada cliente asignado. Se muestra en lugar del
+        // panel informativo genérico.
+        if ("ENTRENADOR".equals(rolVentana)) {
+            if (panelReportesEntrenador == null) {
+                panelReportesEntrenador = new PnlReportesEntrenador();
+            } else {
+                panelReportesEntrenador.refrescarDatos();
+            }
+            mostrarVista(panelReportesEntrenador,
+                    "Mis reportes", btnReportes);
+            return;
+        }
+        // Roles no administradores solo ven el panel informativo del
+        // módulo, sin acceso al PnlReportes ("Reportes administrativos").
         mostrarExperiencia(
                 "REPORTES", btnReportes.getText(), btnReportes,
-                this::mostrarGestionReportes
+                null
         );
     }
+
+    private PnlReportesEntrenador panelReportesEntrenador;
     private void mostrarGestionReportes() {
         if (panelReportes == null) {
             panelReportes = new PnlReportes();

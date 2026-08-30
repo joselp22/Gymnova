@@ -116,6 +116,12 @@ public class PnlMembresiasCobro extends JPanel {
     }
 
     public final void refrescarDatos() {
+        // Antes de mostrar el historial, sincroniza estados:
+        //   * PENDIENTE cuya fecha_inicio ya llegó -> ACTIVA.
+        //   * ACTIVA con fecha_fin expirada -> VENCIDA.
+        // Así el usuario ve el estado real al abrir/recargar la vista.
+        utilidades.VerificadorMembresias.ejecutar();
+
         Cliente actual = clienteSeleccionado();
         if (actual == null && cboCliente.getItemCount() > 0) {
             cboCliente.setSelectedIndex(0);
@@ -438,9 +444,10 @@ public class PnlMembresiasCobro extends JPanel {
         DefaultTableModel m = (DefaultTableModel) tblHistorial.getModel();
         m.setRowCount(0);
         for (MembresiaCobroResumen fila : historial) {
+            String estado = etiquetaEstado(fila);
             m.addRow(new Object[]{
                 fila.getNumeroMembresia(), fila.getNombrePlan(), fila.getFechaInicio(),
-                fila.getFechaFin(), fila.getEstadoMembresia(), dinero(fila.getCostoFinal()),
+                fila.getFechaFin(), estado, dinero(fila.getCostoFinal()),
                 seguro(fila.getNumeroFactura()), seguro(fila.getCodigoPago()),
                 seguro(fila.getMetodoPago()),
                 fila.getFechaHoraPago() == null ? "" : FECHA_HORA.format(fila.getFechaHoraPago()),
@@ -448,6 +455,23 @@ public class PnlMembresiasCobro extends JPanel {
             });
         }
         lblCantidadHistorial.setText(historial.size() + " registro(s)");
+    }
+
+    /**
+     * Ajusta la etiqueta visible del estado de membresía:
+     *   - Si en la BD está PENDIENTE y la fecha_inicio aún no llega, se
+     *     muestra "PROGRAMADA" para dejar claro que el cobro ya se
+     *     realizó y solo espera a que su vigencia comience.
+     *   - En cualquier otro caso se conserva el estado literal de la BD.
+     */
+    private String etiquetaEstado(MembresiaCobroResumen fila) {
+        String estado = fila.getEstadoMembresia();
+        if ("PENDIENTE".equalsIgnoreCase(estado)
+                && fila.getFechaInicio() != null
+                && fila.getFechaInicio().isAfter(LocalDate.now())) {
+            return "PROGRAMADA";
+        }
+        return estado;
     }
 
     private void actualizarCalculo() {

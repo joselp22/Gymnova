@@ -368,6 +368,33 @@ public class PnlInicioEntrenador extends javax.swing.JPanel {
         jScrollPaneUltimos.getViewport().setBackground(
                 new java.awt.Color(7, 21, 43)
         );
+
+        // Anchos generosos por columna para que nombres como
+        // "Jose Luis Pilca Carvajal" se lean completos. Además, cada
+        // celda muestra tooltip con el texto entero si aun así se corta.
+        int[] anchos = {40, 220, 160, 110, 110, 110};
+        for (int i = 0; i < anchos.length; i++) {
+            tblUltimosClientes.getColumnModel().getColumn(i)
+                    .setPreferredWidth(anchos[i]);
+        }
+        javax.swing.table.DefaultTableCellRenderer conTooltip =
+                new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public java.awt.Component getTableCellRendererComponent(
+                    javax.swing.JTable tabla, Object valor,
+                    boolean seleccionado, boolean enfocado,
+                    int fila, int columna) {
+                java.awt.Component c = super.getTableCellRendererComponent(
+                        tabla, valor, seleccionado, enfocado, fila, columna);
+                setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+                setToolTipText(valor == null ? null : valor.toString());
+                return c;
+            }
+        };
+        for (int i = 0; i < columnas.length; i++) {
+            tblUltimosClientes.getColumnModel().getColumn(i)
+                    .setCellRenderer(conTooltip);
+        }
     }
 
     @SuppressWarnings("unchecked")
