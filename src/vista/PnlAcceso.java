@@ -11,6 +11,7 @@ public class PnlAcceso extends javax.swing.JPanel {
 
     public PnlAcceso() {
         initComponents();
+        integrarPestanaAsistenciaRecepcion();
         gestorConsulta = new GestorConsultaModulo(
                 this, cboTipoContrato, tblPersonal, txtBuscarPersonal,
                 lblCantidadPersonal, "ACCESO",
@@ -46,6 +47,26 @@ public class PnlAcceso extends javax.swing.JPanel {
         formularioDirecto.configurarFormulario();
         actualizarTextosAccion();
         refrescarDatos();
+    }
+
+    /** En Recepción agrega una pestaña dedicada al control manual de entrada/salida. */
+    private void integrarPestanaAsistenciaRecepcion() {
+        if (!esRecepcionista()) {
+            return;
+        }
+        javax.swing.JTabbedPane tabs = new javax.swing.JTabbedPane();
+        tabs.setFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 13));
+        tabs.addTab("Clases y reservas", pnlBaseAcceso);
+        tabs.addTab("Registro de asistencia", new PnlAsistenciaRecepcion());
+        removeAll();
+        setLayout(new java.awt.BorderLayout());
+        add(tabs, java.awt.BorderLayout.CENTER);
+    }
+
+    private boolean esRecepcionista() {
+        return utilidades.SesionUsuario.haySesionActiva()
+                && "Recepcionista".equalsIgnoreCase(
+                        utilidades.SesionUsuario.getUsuarioActual().getNombreRol());
     }
 
 

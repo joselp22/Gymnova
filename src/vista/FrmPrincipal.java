@@ -17,6 +17,7 @@ public class FrmPrincipal extends javax.swing.JFrame {
     private PnlSeguridad panelSeguridad;
     private PnlMembresiasCobro panelMembresias;
     private PnlAcceso panelAcceso;
+    private PnlAsistenciaRecepcion panelAsistenciaRecepcion;
     private PnlClasesGrupalesAdministrador panelClasesGrupalesAdministrador;
     private PnlClasesGrupalesEntrenador panelClasesGrupalesEntrenador;
     private PnlClasesGrupalesCliente panelClasesGrupalesCliente;
@@ -195,7 +196,8 @@ private void cargarAvatarSesion(modelo.Usuario usuario) {
     );
 
     btnPersonal.setEnabled(
-            tieneAlMenosUnPermiso(
+            "RECEPCIONISTA".equals(rolVentana)
+            || tieneAlMenosUnPermiso(
                     new String[][]{
                         {"EMPLEADOS", "VER"},
                         {"ENTRENADORES", "VER"},
@@ -205,7 +207,8 @@ private void cargarAvatarSesion(modelo.Usuario usuario) {
     );
 
     btnSeguridad.setEnabled(
-            tieneAlMenosUnPermiso(
+            "RECEPCIONISTA".equals(rolVentana)
+            || tieneAlMenosUnPermiso(
                     new String[][]{
                         {"ROLES", "VER"},
                         {"PERMISOS", "VER"}
@@ -376,13 +379,18 @@ private void configurarMenuSegunRol() {
         mostrarSoloRol(btnInicio, btnClientes, btnSalud, btnNutricion,
                 btnReportes, btnConfiguracion);
     } else if ("RECEPCIONISTA".equals(rol)) {
-        mostrarSoloRol(btnInicio, btnPersonas, btnClientes, btnMembresias,
-                btnAcceso, btnFinanzas, btnReportes, btnConfiguracion);
+        btnPersonal.setText("⚙  Personal");
+        btnSeguridad.setText("◇  Acceso y seguridad");
+        btnAcceso.setText("▣  Clases");
+        btnAsistencia.setText("◷  Asistencia");
+        mostrarSoloRol(btnInicio, btnPersonas, btnClientes, btnPersonal,
+                btnSeguridad, btnMembresias, btnAcceso, btnAsistencia, btnFinanzas,
+                btnReportes, btnConfiguracion);
     } else if ("ADMINISTRADOR".equals(rol)) {
         btnAcceso.setText("Clases");
-        mostrarSoloRol(btnInicio, btnPersonas, btnClientes, btnPersonal,
-                btnSeguridad, btnMembresias, btnAcceso, btnRutinas,
-                btnSalud, btnNutricion, btnFinanzas,
+        // Personal y Acceso/Seguridad son funciones operativas de Recepción.
+        mostrarSoloRol(btnInicio, btnPersonas, btnClientes, btnMembresias,
+                btnAcceso, btnRutinas, btnSalud, btnNutricion, btnFinanzas,
                 btnReportes, btnConfiguracion);
     } else {
         mostrarSoloRol(btnInicio);
@@ -394,7 +402,7 @@ private void mostrarSoloRol(javax.swing.JButton... visibles) {
             = new java.util.HashSet<>(java.util.Arrays.asList(visibles));
     javax.swing.JButton[] todos = {
         btnInicio, btnPersonas, btnClientes, btnPersonal, btnSeguridad,
-        btnMembresias, btnAcceso, btnRutinas, btnSalud, btnNutricion,
+        btnMembresias, btnAcceso, btnAsistencia, btnRutinas, btnSalud, btnNutricion,
         btnFinanzas, btnReportes, btnConfiguracion
     };
     for (javax.swing.JButton boton : todos) {
@@ -412,6 +420,7 @@ private void mostrarSoloRol(javax.swing.JButton... visibles) {
             btnSeguridad,
             btnMembresias,
             btnAcceso,
+            btnAsistencia,
             btnRutinas,
             btnSalud,
             btnNutricion,
@@ -434,6 +443,10 @@ private void mostrarSoloRol(javax.swing.JButton... visibles) {
 
         btnAcceso.addActionListener(
                 evento -> mostrarAcceso()
+        );
+
+        btnAsistencia.addActionListener(
+                evento -> mostrarAsistenciaRecepcion()
         );
 
         btnRutinas.addActionListener(
@@ -843,7 +856,8 @@ private void mostrarGestionClientes() {
         return;
     }
 
-    if (!verificarAlMenosUnPermisoVista(
+    if (!"RECEPCIONISTA".equals(rolVentana)
+            && !verificarAlMenosUnPermisoVista(
             new String[][]{
                 {"EMPLEADOS", "VER"},
                 {"ENTRENADORES", "VER"},
@@ -871,7 +885,8 @@ private void mostrarGestionClientes() {
         if (!verificarRutaRol("SEGURIDAD")) {
             return;
         }
-        if (!verificarAlMenosUnPermisoVista(
+        if (!"RECEPCIONISTA".equals(rolVentana)
+                && !verificarAlMenosUnPermisoVista(
                 new String[][]{
                     {"ROLES", "VER"},
                     {"PERMISOS", "VER"}
@@ -948,8 +963,8 @@ private void mostrarGestionClientes() {
     }
 
     private void mostrarAccesoRecepcion() {
-        // Sin pestañas: la recepcionista ve directamente el panel de
-        // gestión de clases (mismo que ve el administrador).
+        // En Recepción, "Clases" y "Asistencia" son módulos separados.
+        // Este botón abre exclusivamente la gestión de clases grupales.
         if (panelClasesGrupalesAdministrador == null) {
             panelClasesGrupalesAdministrador =
                     new PnlClasesGrupalesAdministrador();
@@ -957,6 +972,24 @@ private void mostrarGestionClientes() {
             panelClasesGrupalesAdministrador.refrescarDatos();
         }
         mostrarVista(panelClasesGrupalesAdministrador, "Clases", btnAcceso);
+    }
+
+    private void mostrarAsistenciaRecepcion() {
+        if (!"RECEPCIONISTA".equals(rolVentana)) {
+            return;
+        }
+        if (!verificarRutaRol("ACCESO")) {
+            return;
+        }
+        if (!verificarPermisoVista("ACCESO", "VER")) {
+            return;
+        }
+        if (panelAsistenciaRecepcion == null) {
+            panelAsistenciaRecepcion = new PnlAsistenciaRecepcion();
+        } else {
+            panelAsistenciaRecepcion.refrescarDatos();
+        }
+        mostrarVista(panelAsistenciaRecepcion, "Asistencia de clientes", btnAsistencia);
     }
 
     private void mostrarClasesGrupalesAdministrador() {
@@ -1695,6 +1728,7 @@ private void mostrarGestionClientes() {
         btnSeguridad = new javax.swing.JButton();
         btnMembresias = new javax.swing.JButton();
         btnAcceso = new javax.swing.JButton();
+        btnAsistencia = new javax.swing.JButton();
         btnRutinas = new javax.swing.JButton();
         btnSalud = new javax.swing.JButton();
         btnNutricion = new javax.swing.JButton();
@@ -1804,6 +1838,15 @@ private void mostrarGestionClientes() {
         btnAcceso.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         btnAcceso.setPreferredSize(new java.awt.Dimension(214, 34));
 
+        btnAsistencia.setBackground(new java.awt.Color(10, 42, 84));
+        btnAsistencia.setFont(new java.awt.Font("SansSerif", 1, 13)); // NOI18N
+        btnAsistencia.setForeground(new java.awt.Color(255, 255, 255));
+        btnAsistencia.setText("◷  Asistencia");
+        btnAsistencia.setBorderPainted(false);
+        btnAsistencia.setFocusPainted(false);
+        btnAsistencia.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        btnAsistencia.setPreferredSize(new java.awt.Dimension(214, 34));
+
         btnRutinas.setBackground(new java.awt.Color(10, 42, 84));
         btnRutinas.setFont(new java.awt.Font("SansSerif", 1, 13)); // NOI18N
         btnRutinas.setForeground(new java.awt.Color(255, 255, 255));
@@ -1895,6 +1938,7 @@ private void mostrarGestionClientes() {
                                     .addComponent(btnSeguridad, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(btnMembresias, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(btnAcceso, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(btnAsistencia, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(btnRutinas, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(btnSalud, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(btnNutricion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1931,6 +1975,8 @@ private void mostrarGestionClientes() {
                 .addComponent(btnMembresias, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(5, 5, 5)
                 .addComponent(btnAcceso, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(5, 5, 5)
+                .addComponent(btnAsistencia, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(5, 5, 5)
                 .addComponent(btnRutinas, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(5, 5, 5)
@@ -2118,6 +2164,7 @@ private void mostrarGestionClientes() {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAcceso;
+    private javax.swing.JButton btnAsistencia;
     private javax.swing.JButton btnCerrarSesion;
     private javax.swing.JButton btnClientes;
     private javax.swing.JButton btnConfiguracion;

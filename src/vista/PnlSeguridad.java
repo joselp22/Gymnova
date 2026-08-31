@@ -43,6 +43,7 @@ public class PnlSeguridad extends javax.swing.JPanel {
         personaControlador = new PersonaControlador();
         autorizacionControlador = new AutorizacionControlador();
         registrosActuales = new ArrayList<>();
+        configurarAlcanceRol();
         configurarEstilos();
         configurarTabla();
         btnBuscarPersonal.addActionListener(evento -> buscarRegistros());
@@ -77,6 +78,18 @@ public class PnlSeguridad extends javax.swing.JPanel {
         btnEliminar.setVisible(esAdministrador());
         cargarPersonas();
         cambiarSubmodulo();
+    }
+
+    private void configurarAlcanceRol() {
+        if (utilidades.SesionUsuario.haySesionActiva()
+                && "RECEPCIONISTA".equalsIgnoreCase(
+                        utilidades.SesionUsuario.getUsuarioActual().getNombreRol())) {
+            cboTipoContrato.setModel(new javax.swing.DefaultComboBoxModel<>(
+                    new String[]{"Cuentas de usuario", "Roles del sistema",
+                        "Bitacora de auditoria"}));
+            lblTituloPersonal.setText("Acceso y seguridad del personal");
+            lblModuloPersonal.setText("ACCESO");
+        }
     }
 
     public void refrescarDatos() {

@@ -65,7 +65,14 @@ public class AutorizacionControlador {
             }
 
             if (esAdministradorVerificado(usuarioActual)) {
+                return true;
+            }
 
+            // Recepción administra el alta operativa del personal y las cuentas
+            // de acceso. No se le conceden operaciones críticas sobre permisos
+            // del sistema ni eliminación definitiva.
+            if (esRecepcionistaVerificado(usuarioActual)
+                    && permisoOperativoRecepcion(modulo, accion)) {
                 return true;
             }
 
@@ -153,6 +160,40 @@ public class AutorizacionControlador {
                         rolPersistido.getNombreRol())
                 && "ADMINISTRADOR".equalsIgnoreCase(
                         usuario.getNombreRol());
+    }
+
+    private boolean esRecepcionistaVerificado(Usuario usuario)
+            throws SQLException {
+        if (usuario.getIdRol() == null || usuario.getNombreRol() == null) {
+            return false;
+        }
+        Rol rolPersistido = rolDAO.buscar(usuario.getIdRol());
+        return rolPersistido != null
+                && rolPersistido.isEstadoRol()
+                && "RECEPCIONISTA".equalsIgnoreCase(rolPersistido.getNombreRol())
+                && "RECEPCIONISTA".equalsIgnoreCase(usuario.getNombreRol());
+    }
+
+    private boolean permisoOperativoRecepcion(String modulo, String accion) {
+        String m = modulo == null ? "" : modulo.trim().toUpperCase();
+        String a = accion == null ? "" : accion.trim().toUpperCase();
+
+        if (java.util.Set.of("PERSONAL", "EMPLEADOS", "ENTRENADORES",
+                "NUTRICIONISTAS").contains(m)) {
+            return java.util.Set.of("VER", "CREAR", "MODIFICAR", "DESACTIVAR")
+                    .contains(a);
+        }
+        if ("USUARIOS".equals(m)) {
+            return java.util.Set.of("VER", "CREAR", "MODIFICAR", "DESACTIVAR")
+                    .contains(a);
+        }
+        if ("ROLES".equals(m)) {
+            return "VER".equals(a);
+        }
+        if ("BITACORA".equals(m)) {
+            return "VER".equals(a);
+        }
+        return false;
     }
 
     public String getMensaje() {

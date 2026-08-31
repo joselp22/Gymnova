@@ -26,11 +26,12 @@ public final class NavegacionRol {
     public static final String CONFIGURACION = "CONFIGURACION";
 
     private static final Map<String, Set<String>> MODULOS = Map.of(
-            "ADMINISTRADOR", conjunto(INICIO, PERSONAS, CLIENTES, PERSONAL,
-                    SEGURIDAD, MEMBRESIAS, ACCESO, RUTINAS, SALUD, NUTRICION,
-                    FINANZAS, REPORTES, CONFIGURACION),
-            "RECEPCIONISTA", conjunto(INICIO, PERSONAS, CLIENTES, MEMBRESIAS,
-                    ACCESO, FINANZAS, REPORTES, CONFIGURACION),
+            "ADMINISTRADOR", conjunto(INICIO, PERSONAS, CLIENTES, MEMBRESIAS,
+                    ACCESO, RUTINAS, SALUD, NUTRICION, FINANZAS, REPORTES,
+                    CONFIGURACION),
+            "RECEPCIONISTA", conjunto(INICIO, PERSONAS, CLIENTES, PERSONAL,
+                    SEGURIDAD, MEMBRESIAS, ACCESO, FINANZAS, REPORTES,
+                    CONFIGURACION),
             "ENTRENADOR", conjunto(INICIO, CLIENTES, ACCESO, RUTINAS, SALUD,
                     REPORTES, CONFIGURACION),
             "NUTRICIONISTA", conjunto(INICIO, CLIENTES, SALUD, NUTRICION,

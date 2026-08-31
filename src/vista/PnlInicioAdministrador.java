@@ -17,14 +17,33 @@ import utilidades.SesionUsuario;
 public class PnlInicioAdministrador extends javax.swing.JPanel {
 
     private final DashboardControlador dashboardControlador;
+    private final javax.swing.Timer temporizadorActualizacion;
 
     public PnlInicioAdministrador() {
         initComponents();
         dashboardControlador = new DashboardControlador();
+        temporizadorActualizacion = new javax.swing.Timer(30000, e -> refrescarDatos());
+        temporizadorActualizacion.setRepeats(true);
         configurarTabla();
         utilidades.TemaDashboard.aplicar(this,
                 utilidades.TemaDashboard.RolVisual.ADMINISTRADOR);
         refrescarDatos();
+    }
+
+    @Override
+    public void addNotify() {
+        super.addNotify();
+        if (temporizadorActualizacion != null && !temporizadorActualizacion.isRunning()) {
+            temporizadorActualizacion.start();
+        }
+    }
+
+    @Override
+    public void removeNotify() {
+        if (temporizadorActualizacion != null) {
+            temporizadorActualizacion.stop();
+        }
+        super.removeNotify();
     }
 
     public final void refrescarDatos() {

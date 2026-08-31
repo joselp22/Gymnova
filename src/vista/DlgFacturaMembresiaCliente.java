@@ -9,6 +9,8 @@ import java.awt.Font;
 import java.awt.Frame;
 import java.io.File;
 import java.io.IOException;
+import java.awt.Desktop;
+import java.nio.file.Files;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -60,7 +62,8 @@ public final class DlgFacturaMembresiaCliente extends JDialog {
     private final JComboBox<ItemCliente> cboClientes = new JComboBox<>();
     private final JTable tblMembresias = new JTable();
     private final JLabel lblResumen = new JLabel(" ");
-    private final JButton btnGenerar = botonPrimario("Generar factura PDF");
+    private final JButton btnGuardar = botonPrimario("Guardar como PDF");
+    private final JButton btnImprimir = new JButton("Imprimir factura");
 
     public DlgFacturaMembresiaCliente(Frame padre) {
         super(padre, "Factura de membresía por cliente", true);
@@ -75,10 +78,13 @@ public final class DlgFacturaMembresiaCliente extends JDialog {
 
         cargarClientes();
         cboClientes.addActionListener(e -> cargarMembresiasCliente());
-        btnGenerar.setEnabled(false);
+        btnGuardar.setEnabled(false);
+        btnImprimir.setEnabled(false);
         tblMembresias.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
-                btnGenerar.setEnabled(tblMembresias.getSelectedRow() >= 0);
+                boolean seleccionada = tblMembresias.getSelectedRow() >= 0;
+                btnGuardar.setEnabled(seleccionada);
+                btnImprimir.setEnabled(seleccionada);
             }
         });
 
@@ -155,10 +161,12 @@ public final class DlgFacturaMembresiaCliente extends JDialog {
 
         JPanel botones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         botones.setOpaque(false);
-        btnGenerar.addActionListener(e -> generarFactura());
+        btnGuardar.addActionListener(e -> guardarFacturaPdf());
+        btnImprimir.addActionListener(e -> imprimirFactura());
         JButton btnCerrar = new JButton("Cerrar");
         btnCerrar.addActionListener(e -> dispose());
-        botones.add(btnGenerar);
+        botones.add(btnGuardar);
+        botones.add(btnImprimir);
         botones.add(btnCerrar);
         pie.add(botones, BorderLayout.EAST);
         return pie;
@@ -204,7 +212,8 @@ public final class DlgFacturaMembresiaCliente extends JDialog {
     private void cargarMembresiasCliente() {
         DefaultTableModel modelo = nuevoModelo();
         tblMembresias.setModel(modelo);
-        btnGenerar.setEnabled(false);
+        btnGuardar.setEnabled(false);
+        btnImprimir.setEnabled(false);
         lblResumen.setText(" ");
 
         ItemCliente sel = (ItemCliente) cboClientes.getSelectedItem();
@@ -258,16 +267,16 @@ public final class DlgFacturaMembresiaCliente extends JDialog {
                 + "  ·  " + total + " membresía(s) registrada(s)");
     }
 
-    private void generarFactura() {
+    private FacturaDocumento construirFacturaSeleccionada() {
         int fila = tblMembresias.getSelectedRow();
         if (fila < 0) {
             JOptionPane.showMessageDialog(this,
                     "Seleccione una membresía en la tabla.",
                     "Factura", JOptionPane.WARNING_MESSAGE);
-            return;
+            return null;
         }
         ItemCliente sel = (ItemCliente) cboClientes.getSelectedItem();
-        if (sel == null) return;
+        if (sel == null) return null;
 
         Long idMembresia = (Long) tblMembresias.getModel().getValueAt(fila, 0);
         String numeroMembresia = String.valueOf(
@@ -277,13 +286,12 @@ public final class DlgFacturaMembresiaCliente extends JDialog {
         String estado = String.valueOf(
                 tblMembresias.getModel().getValueAt(fila, 6));
 
-        // Recuperar datos completos del cliente y de la membresía para el PDF.
         Persona cliente = cargarClientePersona(sel.idPersona);
         if (cliente == null) {
             JOptionPane.showMessageDialog(this,
                     "No fue posible cargar los datos del cliente.",
                     "Factura", JOptionPane.ERROR_MESSAGE);
-            return;
+            return null;
         }
 
         DatosMembresia datos = cargarDatosMembresia(idMembresia);
@@ -291,28 +299,10 @@ public final class DlgFacturaMembresiaCliente extends JDialog {
             JOptionPane.showMessageDialog(this,
                     "No fue posible cargar la membresía seleccionada.",
                     "Factura", JOptionPane.ERROR_MESSAGE);
-            return;
+            return null;
         }
 
         LocalDate hoy = LocalDate.now();
-        String nombreArchivo = "Factura_" + sanear(cliente.getNombreCompleto())
-                + "_" + hoy + ".pdf";
-
-        JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Guardar factura de membresía");
-        chooser.setSelectedFile(new File(nombreArchivo));
-        chooser.setFileFilter(new FileNameExtensionFilter(
-                "Archivos PDF (*.pdf)", "pdf"));
-        if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
-            return;
-        }
-        File destino = chooser.getSelectedFile();
-        if (!destino.getName().toLowerCase().endsWith(".pdf")) {
-            destino = new File(destino.getParentFile(),
-                    destino.getName() + ".pdf");
-        }
-
-        // Armar el documento de factura en memoria a partir de la membresía.
         Factura factura = new Factura();
         factura.setNumeroFactura("MEM-" + numeroMembresia + "-" + hoy);
         factura.setFechaEmision(hoy);
@@ -337,31 +327,65 @@ public final class DlgFacturaMembresiaCliente extends JDialog {
         doc.setCliente(cliente);
         doc.setDetalles(detalles);
         doc.setPagos(new ArrayList<>());
+        return doc;
+    }
+
+    private void guardarFacturaPdf() {
+        FacturaDocumento doc = construirFacturaSeleccionada();
+        if (doc == null) return;
+
+        String nombreArchivo = "Factura_" + sanear(doc.getCliente().getNombreCompleto())
+                + "_" + LocalDate.now() + ".pdf";
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Guardar factura de membresía como PDF");
+        chooser.setSelectedFile(new File(nombreArchivo));
+        chooser.setFileFilter(new FileNameExtensionFilter(
+                "Archivos PDF (*.pdf)", "pdf"));
+        if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+
+        File destino = chooser.getSelectedFile();
+        if (!destino.getName().toLowerCase().endsWith(".pdf")) {
+            destino = new File(destino.getParentFile(), destino.getName() + ".pdf");
+        }
+        if (destino.exists() && JOptionPane.showConfirmDialog(this,
+                "El archivo ya existe. ¿Desea sobrescribirlo?",
+                "Confirmar", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
 
         try {
-            DocumentoFacturaPDF.generar(doc, Path.of(destino.getAbsolutePath()));
+            DocumentoFacturaPDF.generar(doc, destino.toPath());
+            JOptionPane.showMessageDialog(this,
+                    "Factura guardada correctamente en:\n" + destino.getAbsolutePath(),
+                    "Factura", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException | RuntimeException ex) {
             JOptionPane.showMessageDialog(this,
                     "No fue posible generar el PDF: " + ex.getMessage(),
                     "Factura", JOptionPane.ERROR_MESSAGE);
-            return;
         }
+    }
 
-        int op = JOptionPane.showConfirmDialog(this,
-                "Factura guardada en:\n" + destino.getAbsolutePath()
-                        + "\n\n¿Deseas abrirla ahora?",
-                "Factura generada", JOptionPane.YES_NO_OPTION,
-                JOptionPane.INFORMATION_MESSAGE);
-        if (op == JOptionPane.YES_OPTION
-                && java.awt.Desktop.isDesktopSupported()) {
-            try {
-                java.awt.Desktop.getDesktop().open(destino);
-            } catch (IOException | UnsupportedOperationException ex) {
+    private void imprimirFactura() {
+        FacturaDocumento doc = construirFacturaSeleccionada();
+        if (doc == null) return;
+        try {
+            Path temporal = Files.createTempFile("gymnova_membresia_", ".pdf");
+            temporal.toFile().deleteOnExit();
+            DocumentoFacturaPDF.generar(doc, temporal);
+            if (!Desktop.isDesktopSupported()
+                    || !Desktop.getDesktop().isSupported(Desktop.Action.PRINT)) {
                 JOptionPane.showMessageDialog(this,
-                        "No se pudo abrir el archivo automáticamente. "
-                        + "Ábralo manualmente desde la ubicación indicada.",
-                        "GYMNOVA", JOptionPane.INFORMATION_MESSAGE);
+                        "El sistema operativo no dispone de impresión PDF directa. "
+                        + "Puede usar 'Guardar como PDF' y luego imprimir el archivo.",
+                        "Impresión", JOptionPane.WARNING_MESSAGE);
+                return;
             }
+            Desktop.getDesktop().print(temporal.toFile());
+            JOptionPane.showMessageDialog(this,
+                    "La factura fue enviada a la impresora predeterminada.",
+                    "Impresión", JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException | UnsupportedOperationException | SecurityException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "No fue posible imprimir la factura: " + ex.getMessage(),
+                    "Impresión", JOptionPane.ERROR_MESSAGE);
         }
     }
 
