@@ -19,7 +19,7 @@ private static final String URL_PREDETERMINADA
 
     private static final String USUARIO_PREDETERMINADO = "postgres";
 
-    private static final String CONTRASENA_PREDETERMINADA = "1510";
+    private static final String CONTRASENA_PREDETERMINADA = "VictorSdef/17";
     
     private ConexionPostgreSQL() {
         // Evita crear objetos de esta clase.

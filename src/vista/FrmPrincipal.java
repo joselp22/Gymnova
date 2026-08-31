@@ -355,7 +355,7 @@ private void configurarMenuSegunRol() {
         btnAcceso.setText("Clases");
         btnRutinas.setText("Mi rutina");
         btnSalud.setText("Mi progreso");
-        btnNutricion.setText("Mi nutrición");
+        btnNutricion.setText("Plan alimenticio");
         btnReportes.setText("Mi historial");
         mostrarSoloRol(btnInicio, btnClientes, btnMembresias, btnAcceso,
                 btnRutinas, btnSalud, btnNutricion, btnReportes,
@@ -1158,12 +1158,30 @@ private void mostrarGestionClientes() {
             return;
         }
 
-        // Otros roles autorizados (por ejemplo Cliente) conservan su
-        // experiencia de consulta sin acceder a las pantallas profesionales.
+        // El Cliente ve su "Plan alimenticio" en formato tarjetas por día.
+        if ("CLIENTE".equals(rolVentana)) {
+            mostrarPlanAlimenticioCliente();
+            return;
+        }
+
+        // Otros roles autorizados conservan la experiencia de consulta
+        // genérica sin acceder a las pantallas profesionales.
         mostrarExperiencia(
                 "NUTRICION", btnNutricion.getText(), btnNutricion,
                 this::mostrarGestionNutricion
         );
+    }
+
+    private PnlPlanNutricionalCliente panelPlanNutricionalCliente;
+
+    private void mostrarPlanAlimenticioCliente() {
+        if (panelPlanNutricionalCliente == null) {
+            panelPlanNutricionalCliente = new PnlPlanNutricionalCliente();
+        } else {
+            panelPlanNutricionalCliente.refrescarDatos();
+        }
+        mostrarVista(panelPlanNutricionalCliente,
+                "Plan alimenticio", btnNutricion);
     }
 
     private void mostrarNutricionAdministrador() {

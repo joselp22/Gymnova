@@ -375,6 +375,20 @@ public class PnlReportes extends javax.swing.JPanel {
         fila.add(botonReporte("Bitácora",
                 e -> abrir(new DlgReporteBitacora(ventana()))));
 
+        // Nuevo: factura individual de membresía por cliente. Deja elegir
+        // un cliente, ver sus membresías y guardar la factura como PDF con
+        // el nombre "Factura_<NombreCliente>_<yyyy-MM-dd>.pdf".
+        javax.swing.JButton btnFacturaCliente = new javax.swing.JButton(
+                "🧾 Factura de membresía (cliente)");
+        btnFacturaCliente.setBackground(new java.awt.Color(255, 140, 0));
+        btnFacturaCliente.setForeground(java.awt.Color.WHITE);
+        btnFacturaCliente.setFocusPainted(false);
+        btnFacturaCliente.setBorder(javax.swing.BorderFactory.createEmptyBorder(
+                6, 14, 6, 14));
+        btnFacturaCliente.addActionListener(
+                e -> abrir(new DlgFacturaMembresiaCliente(ventana())));
+        fila.add(btnFacturaCliente);
+
         // Botón especial: consolida TODO en un archivo HTML y lo descarga
         // con el nombre "Reporte YYYY-MM-DD.html" al destino que elija.
         javax.swing.JButton btnConsolidado = new javax.swing.JButton(

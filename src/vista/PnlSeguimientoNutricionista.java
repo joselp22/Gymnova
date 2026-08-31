@@ -65,6 +65,15 @@ public class PnlSeguimientoNutricionista extends JPanel {
     private final JTable tblEvolucionMedidas = new JTable();
     private final JTable tblEvolucionIndicadores = new JTable();
 
+    // Evolución de peso (mismo formato que la vista del entrenador):
+    // KPIs + tabla con la historia real del cliente en atención.
+    private final JLabel lblEvoPesoInicial = new JLabel("—");
+    private final JLabel lblEvoPesoMeta = new JLabel("—");
+    private final JLabel lblEvoPesoActual = new JLabel("—");
+    private final JLabel lblEvoAvance = new JLabel("—");
+    private final JLabel lblEvoTendencia = new JLabel(" ");
+    private final JTable tblEvolucionPeso = new JTable();
+
     public PnlSeguimientoNutricionista() {
         construir();
         eventos();
@@ -193,23 +202,182 @@ public class PnlSeguimientoNutricionista extends JPanel {
         return p;
     }
 
+    /**
+     * Pestaña "Evolución": muestra la evolución de peso del cliente en
+     * atención con el mismo formato que la vista del entrenador
+     * (PnlProgresoPesoEntrenador) - KPIs con peso inicial/meta/actual y
+     * % de avance más una tabla con la historia real de mediciones.
+     * Solo lectura: la carga de nuevas mediciones sigue haciéndose desde
+     * la pestaña "Mediciones".
+     */
     private JPanel crearEvolucion() {
-        JPanel p = new JPanel(new GridLayout(2, 1, 0, 12));
+        JPanel p = new JPanel(new BorderLayout(0, 12));
         p.setBackground(NutricionistaUI.FONDO);
         p.setBorder(javax.swing.BorderFactory.createEmptyBorder(12, 0, 0, 0));
-        JPanel medidas = NutricionistaUI.tarjeta();
-        medidas.setLayout(new BorderLayout(0, 8));
-        medidas.add(NutricionistaUI.tituloSeccion("Evolución de medidas"), BorderLayout.NORTH);
-        NutricionistaUI.tabla(tblEvolucionMedidas);
-        medidas.add(NutricionistaUI.scrollTabla(tblEvolucionMedidas), BorderLayout.CENTER);
-        JPanel indicadores = NutricionistaUI.tarjeta();
-        indicadores.setLayout(new BorderLayout(0, 8));
-        indicadores.add(NutricionistaUI.tituloSeccion("Evolución de indicadores"), BorderLayout.NORTH);
-        NutricionistaUI.tabla(tblEvolucionIndicadores);
-        indicadores.add(NutricionistaUI.scrollTabla(tblEvolucionIndicadores), BorderLayout.CENTER);
-        p.add(medidas);
-        p.add(indicadores);
+
+        // Cabecera
+        JPanel aviso = NutricionistaUI.tarjeta();
+        aviso.setLayout(new BorderLayout());
+        aviso.add(NutricionistaUI.tituloSeccion(
+                "Evolución de peso del cliente"), BorderLayout.WEST);
+        JLabel ayuda = new JLabel(
+                "Registra nuevas mediciones en la pestaña \"Mediciones\".");
+        ayuda.setForeground(NutricionistaUI.TEXTO_SECUNDARIO);
+        aviso.add(ayuda, BorderLayout.EAST);
+
+        // KPIs
+        JPanel kpis = new JPanel(new GridLayout(1, 4, 12, 0));
+        kpis.setOpaque(false);
+        kpis.add(tarjetaKPIEvolucion("PESO INICIAL", lblEvoPesoInicial));
+        kpis.add(tarjetaKPIEvolucion("PESO META", lblEvoPesoMeta));
+        kpis.add(tarjetaKPIEvolucion("PESO ACTUAL", lblEvoPesoActual));
+        kpis.add(tarjetaKPIEvolucion("% AVANCE HACIA META", lblEvoAvance));
+
+        // Tabla con la historia de mediciones
+        NutricionistaUI.tabla(tblEvolucionPeso);
+        JPanel tarjetaTabla = NutricionistaUI.tarjeta();
+        tarjetaTabla.setLayout(new BorderLayout(0, 8));
+        JPanel cabTabla = new JPanel(new BorderLayout());
+        cabTabla.setOpaque(false);
+        cabTabla.add(NutricionistaUI.tituloSeccion(
+                "Historial de mediciones"), BorderLayout.WEST);
+        lblEvoTendencia.setFont(
+                new java.awt.Font("SansSerif", java.awt.Font.BOLD, 13));
+        cabTabla.add(lblEvoTendencia, BorderLayout.EAST);
+        tarjetaTabla.add(cabTabla, BorderLayout.NORTH);
+        tarjetaTabla.add(NutricionistaUI.scrollTabla(tblEvolucionPeso),
+                BorderLayout.CENTER);
+
+        JPanel norte = new JPanel(new BorderLayout(0, 12));
+        norte.setOpaque(false);
+        norte.add(aviso, BorderLayout.NORTH);
+        norte.add(kpis, BorderLayout.CENTER);
+        p.add(norte, BorderLayout.NORTH);
+        p.add(tarjetaTabla, BorderLayout.CENTER);
         return p;
+    }
+
+    private JPanel tarjetaKPIEvolucion(String titulo, JLabel valor) {
+        JPanel t = NutricionistaUI.tarjeta();
+        t.setLayout(new BorderLayout(0, 6));
+        valor.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        valor.setFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 22));
+        valor.setForeground(NutricionistaUI.TEXTO);
+        JLabel l = new JLabel(titulo, javax.swing.SwingConstants.CENTER);
+        l.setForeground(NutricionistaUI.TEXTO_SECUNDARIO);
+        l.setFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 11));
+        t.add(valor, BorderLayout.CENTER);
+        t.add(l, BorderLayout.SOUTH);
+        return t;
+    }
+
+    private void cargarEvolucionPeso() {
+        DefaultTableModel m = modelo(new String[]{
+            "Fecha", "Peso (kg)", "Cambio vs. anterior",
+            "Distancia a la meta", "Observaciones"});
+        lblEvoPesoInicial.setText("—");
+        lblEvoPesoMeta.setText("—");
+        lblEvoPesoActual.setText("—");
+        lblEvoAvance.setText("—");
+        lblEvoTendencia.setText(" ");
+        tblEvolucionPeso.setModel(m);
+
+        modelo.Cliente cliente = ClienteEnAtencion.actual();
+        if (cliente == null || cliente.getIdPersona() == null) {
+            return;
+        }
+        Double pesoInicial = cliente.getPesoInicial() == null
+                ? null : cliente.getPesoInicial().doubleValue();
+        Double pesoMeta = cliente.getPesoMeta() == null
+                ? null : cliente.getPesoMeta().doubleValue();
+
+        java.util.List<Object[]> filas = new java.util.ArrayList<>();
+        String sql = "SELECT ef.fecha_evaluacion, mc.peso_kg, "
+                + "       mc.observaciones "
+                + "FROM evaluacion_fisica ef "
+                + "JOIN medicion_corporal mc "
+                + "  ON mc.id_evaluacion = ef.id_evaluacion "
+                + "WHERE ef.id_cliente = ? "
+                + "  AND mc.peso_kg IS NOT NULL "
+                + "ORDER BY ef.fecha_evaluacion, ef.id_evaluacion";
+        try (java.sql.Connection c
+                     = conexion.ConexionPostgreSQL.getConexion();
+             java.sql.PreparedStatement s = c.prepareStatement(sql)) {
+            s.setLong(1, cliente.getIdPersona());
+            try (java.sql.ResultSet r = s.executeQuery()) {
+                Double anterior = null;
+                while (r.next()) {
+                    java.sql.Date f = r.getDate(1);
+                    java.math.BigDecimal p = r.getBigDecimal(2);
+                    String obs = r.getString(3);
+                    if (f == null || p == null) continue;
+                    double peso = p.doubleValue();
+                    String cambio = anterior == null ? "—"
+                            : String.format(java.util.Locale.US,
+                                    "%+.2f kg", peso - anterior);
+                    String distMeta = pesoMeta == null ? "—"
+                            : String.format(java.util.Locale.US,
+                                    "%.2f kg", peso - pesoMeta);
+                    filas.add(new Object[]{f.toLocalDate().toString(),
+                        String.format(java.util.Locale.US, "%.2f", peso),
+                        cambio, distMeta, obs == null ? "" : obs});
+                    anterior = peso;
+                }
+            }
+        } catch (java.sql.SQLException ex) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "No fue posible cargar la historia de peso: "
+                    + ex.getMessage(),
+                    "GYMNOVA",
+                    javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Más reciente arriba
+        for (int idx = filas.size() - 1; idx >= 0; idx--) {
+            m.addRow(filas.get(idx));
+        }
+
+        lblEvoPesoInicial.setText(pesoInicial == null ? "—"
+                : String.format(java.util.Locale.US, "%.2f kg",
+                        pesoInicial));
+        lblEvoPesoMeta.setText(pesoMeta == null ? "—"
+                : String.format(java.util.Locale.US, "%.2f kg", pesoMeta));
+
+        Double actual = filas.isEmpty() ? null
+                : Double.parseDouble(String.valueOf(
+                        filas.get(filas.size() - 1)[1]));
+        lblEvoPesoActual.setText(actual == null ? "—"
+                : String.format(java.util.Locale.US, "%.2f kg", actual));
+
+        if (pesoInicial != null && pesoMeta != null && actual != null
+                && Math.abs(pesoInicial - pesoMeta) > 0.001) {
+            double avanzado = pesoInicial - actual;
+            double objetivo = pesoInicial - pesoMeta;
+            double pct = Math.max(0.0, Math.min(100.0,
+                    (avanzado / objetivo) * 100.0));
+            lblEvoAvance.setText(String.format(java.util.Locale.US,
+                    "%.0f %%", pct));
+        }
+
+        if (filas.size() >= 2 && pesoMeta != null && actual != null) {
+            double anteriorPeso = Double.parseDouble(String.valueOf(
+                    filas.get(filas.size() - 2)[1]));
+            double distActual = Math.abs(actual - pesoMeta);
+            double distAnterior = Math.abs(anteriorPeso - pesoMeta);
+            double diff = distAnterior - distActual;
+            if (Math.abs(diff) < 0.1) {
+                lblEvoTendencia.setText("Estancado");
+                lblEvoTendencia.setForeground(
+                        new java.awt.Color(160, 174, 192));
+            } else if (diff > 0) {
+                lblEvoTendencia.setText("↗ Progresando");
+                lblEvoTendencia.setForeground(NutricionistaUI.VERDE);
+            } else {
+                lblEvoTendencia.setText("↘ Retrocediendo");
+                lblEvoTendencia.setForeground(NutricionistaUI.ROJO);
+            }
+        }
     }
 
     private void eventos() {
@@ -227,6 +395,7 @@ public class PnlSeguimientoNutricionista extends JPanel {
         cargarMediciones();
         cargarResultados();
         cargarRecomendaciones();
+        cargarEvolucionPeso();
     }
 
     private void cargarIndicadores() {
